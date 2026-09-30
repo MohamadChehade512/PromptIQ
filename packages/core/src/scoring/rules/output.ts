@@ -4,7 +4,7 @@ import type { Rule } from '../types';
 import { fileUse, hasMaterial, isReviewTask } from './helpers';
 
 const FORMAT_RE =
-  /\b(?:json|table|list|bullets?|bullet points|markdown|csv|yaml|xml|paragraphs?|headings?|headers?|code block|numbered|outline|format(?:ted)?|schema|template|essay|email|tweet|thread|post|report|script|function|class|component|module|step[- ]by[- ]step|steps|sentences?|columns?|fields?|diff|snippet|slides?|memo|letter|summary|haiku|poem)\b/;
+  /\b(?:json|table|list|bullets?|bullet points|markdown|csv|yaml|xml|paragraphs?|headings?|headers?|code block|numbered|outline|format(?:ted)?|schema|template|essay|email|tweet|thread|post|report|script|function|class|component|module|step[- ]by[- ]step|steps|sentences?|columns?|fields?|diff|snippet|slides?|memo|letter|summary|haiku|poem|descriptions?|captions?|bio|speech|toast|announcement|newsletter|press release|story|stories|ad|advertisement|slogan|tagline|headline|abstract|proposal|cover letter|query|queries)\b/;
 /** "brief" as a noun ("the assignment brief") and "page numbers" are not length limits. */
 const LENGTH_WORDS_RE = new RegExp(
   `\\b(?:${BRIEF_WORD}|short|concise(?:ly)?|succinct(?:ly)?|tl;?dr|detailed|comprehensive|in[- ]depth|long|one[- ]pager|(?:one|a|single|half a)[- ]page)\\b`,
@@ -34,7 +34,7 @@ export const outputRules: Rule[] = [
               useCase === 'brainstorming'
                 ? 0.2
                 : useCase === 'qa' && !isReviewTask(features)
-                  ? 0.3
+                  ? 0.35
                   : 0.45,
             message: "The prompt doesn't say what shape the answer should take.",
             suggestion:
@@ -59,9 +59,19 @@ export const outputRules: Rule[] = [
       ) {
         return null;
       }
+      if (unbounded) {
+        // "Everything, in as much detail as possible" is the opposite of a scope.
+        return {
+          penalty: 0.6,
+          message:
+            'The prompt asks for everything, so the answer will be long, costly and unfocused.',
+          suggestion:
+            'Narrow it to what you need, e.g. "the 3 main causes, one paragraph each" or "a 200-word overview for a beginner".',
+        };
+      }
       return {
         penalty:
-          useCase === 'coding' ? 0.15 : useCase === 'qa' && !isReviewTask(features) ? 0.25 : 0.4,
+          useCase === 'coding' ? 0.15 : useCase === 'qa' && !isReviewTask(features) ? 0.3 : 0.4,
         message:
           'No length or scope limit. Output costs 5–6× more than input, so answers tend to run long.',
         suggestion:

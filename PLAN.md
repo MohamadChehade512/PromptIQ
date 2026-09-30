@@ -1,4 +1,4 @@
-# PromptGenius: Research & Build Plan
+# Prompt IQ (formerly PromptGenius): Research & Build Plan
 
 Status: Phase 0 and Phase 1 (M1–M7) built, running locally. Next step: Phase 2 (accounts). Research date: 2026-09-23.
 Pricing and limits change often. Check every number in §1.2 against the vendor page before it goes into the app's config.
@@ -312,6 +312,78 @@ The score is a deterministic, explainable, rule-based engine. **Every point lost
   | The fully specified review prompt | 64–84 | 86–97 |
 
 - **Calibration:** 5 résumé-review prompts were added (63 total): **94%** in band, Spearman 0.93.
+
+**Revision: coding, writing and Q&A calibration (2026-09-30).**
+
+*Method.* 75 new prompts: 20 coding, 20 writing and 20 Q&A, plus a second blind set of 15.
+- Labels were written and frozen **before** scoring and never changed afterwards.
+- A third of the first 60 were held out (never looked at while tuning) and scored once as a blind test.
+- After that, they joined the tuning set, and a fresh blind set of 15 (`holdout2`) was written, again before any changes.
+- `pnpm calibrate` prints the tuning table; it lists holdout rows only with `--holdout`.
+
+*Honest numbers.*
+
+| Stage | Tuning set | Blind set |
+|---|---|---|
+| Before any change | 88% | **72%** (v1, 18 prompts) |
+| After round 1 | 93% | **78%** (v1, blind) |
+| Before round 2 | | **80%** (v2, 15 prompts, blind) |
+| After round 2 | 93% (122 prompts, Spearman 0.94) | 93% (v2), no longer blind |
+
+The blind numbers are the real accuracy to expect on new prompts: **about 80%**. The earlier 96% was optimistic, as suspected.
+
+*Fixes (all general, none specific to one prompt):*
+- `context.no-repro`: "my app is slow / my code doesn't work" with no code, error or symptoms. A partial penalty applies when only an error message is given.
+- `clarity.shouting`: mostly capital letters or "!!!".
+- `clarity.no-focus`: "tell me everything about X" in a short prompt. "Everything" requests also cost 60% of the output score.
+- **Personal pieces** (cover letter, toast, eulogy, bio…) need personal facts: `context.no-details` is at 70%, or 40% when the person is named.
+- **Background and audience:**
+  - First-person situations ("I'm 34 and rent…", "I'm the best man…", "our 12-person nonprofit") count as background.
+  - Audiences now include "to customers", "for our finance team", guests, crowd, families, seniors.
+- **Formats:** product descriptions, captions, speeches, stories, announcements and more count as formats.
+- **Topic detection:** greetings, politeness and hype ("thanks so much", "viral", "tons of likes") aren't topic words.
+- **Referents:** a dummy "it" ("is it better to…") isn't a missing reference when the topic is named, and "which one should I pick?" is.
+- **Q&A with no context, format or length** is penalized a little more (no-purpose 35%, format 35%, length 30%).
+- **Coding:** conceptual questions ("difference between a process and a thread") don't need a language, and "leaks / stuck / times out / throws" count as describing the problem.
+- **Tried and reverted:** a stricter substance gate when any core dimension is empty. Legitimate "OK" prompts also have zero context, so it pushed too many of them into weak.
+
+*Known disagreements, left as they are rather than tuned away:*
+- The Flask error question scores 90. It includes the exact error, which arguably beats its "OK" label.
+- "Summarize this." with a report attached scores 43.
+- Two brainstorming prompts sit at the band edges (49 and 80).
+
+*Next:* score real prompts from users as a third blind set before tuning again.
+
+**Project access toggle (2026-09-30).**
+- **The toggle:** "The AI can already see my project files", remembered per browser. It's for coding agents (Claude Code, Cursor, GitHub Copilot, Codex) and Claude/ChatGPT Projects, where "fix the bug in src/auth/" is a complete reference.
+- **Checks that stand down when it's on:**
+  - skipped: `clarity.missing-referent`, `context.missing-material`, `context.coding-stack`, `context.no-repro`, `context.document-as-image`;
+  - softened to 50%: `context.no-details`, `context.no-purpose`, `clarity.too-short`, `output.no-format`, `output.no-length`.
+- **New `agent.*` checks** apply only to change requests (a sentence that starts "Fix…", "Please add…", "Can you refactor…"), never to questions. They follow Claude Code's best practices ("give Claude a way to verify its work"; "provide the symptom, the likely location, and what 'fixed' looks like"), Codex's ("ask it to … run the relevant checks") and GitHub Copilot's:
+  - `agent.no-verification`: no test, command, build or screenshot to check the result (output, 45%);
+  - `agent.no-location`: no path, file, `@file`, identifier or named part of the app (context, 40%);
+  - `agent.no-symptom`: "fix the … bug" without what's going wrong (context, 45%).
+- **Other effects:** the Usage panel notes that these tools also read files as they work, so real usage is higher than the message alone. The paid rewrite is told the tool can read the project, so it never asks the user to paste code.
+- **Calibration:** 13 agent prompts, including Anthropic's own before/after examples, with labels frozen before the feature was built.
+  - Before the feature: 8 of 13 in band. Anthropic's "after" example scored 59.
+  - After: 12 of 13. Anthropic's "after" examples score 88–99; the plain-chat control stays weak.
+  - The miss: "Fix the login bug." with project access scores 34 against an "OK" label. Anthropic uses that exact prompt as its *bad* example, so the label is arguably wrong; it's left as frozen.
+
+**Revision: the project toggle never lowers a score (2026-09-30, user report).**
+- **The report:** "can you add a button that…" scored *lower* with "the AI can see my project" on (75 → 63 under Q&A). Four causes:
+  1. The agent checks were added on top of the plain-chat checks, not in place of them.
+  2. Named areas ("the navbar", "the search filters") didn't count as saying where.
+  3. Small edits were over-checked.
+  4. Two general bugs: bare "can you / could you" counted as filler, measured only as a share of the prompt, and "rename" wasn't a task verb.
+- **Fixes:**
+  - **Guarantee:** with the toggle on, the engine also scores the prompt as plain chat. If the agent checks would push the score below that, they're weighted down until they don't. The suggestions still show, marked as counted lightly. A test runs every prompt in the calibration and holdout sets through both modes and fails on any drop.
+  - **Location:** named parts of an app (header, navbar, sidebar, the orders list, filters, settings…) count as saying where.
+  - **Small edits:** typos, renames, log lines, wording, colors and labels skip the agent checks, following Claude Code's guidance to "ask Claude to do it directly".
+  - **Lighter agent checks:** `agent.no-verification` and `agent.no-location` are at 30%.
+  - **Code under Q&A:** a code-change request ("can you add a button…", "rename getUser…") is scored as a coding task whatever the selected use case, so Q&A and Coding agree.
+  - **Filler:** bare "can you / could you / would you" isn't filler ("can you please" still is), and the penalty scales with how many filler words there are, reaching full weight at 6.
+  - **Task verbs:** rename, move, replace, paginate, sort, toggle, hide, deploy and similar.
+- **Result:** no drops across all prompts. "can you add a button which exports the table as a CSV" scores 64 → 79 with the toggle, and the same under Q&A and Coding. Calibration is still 93%, with the blind set at 93% as well.
 
 ### 2.6 Optional AI rewrite (paid, strictly opt-in)
 - **One explicit button: "✨ Rewrite with AI (paid)".** Nothing else in the app calls a paid API. Scoring, estimation and suggestions all run locally or through free counting endpoints.

@@ -37,6 +37,8 @@ export interface RuleContext {
   reasoning: boolean;
   /** Tokens already in the conversation. A follow-up can lean on that context. */
   historyTokens: number;
+  /** The AI tool already has the user's project files, so it can find what the prompt names. */
+  workspace: boolean;
   /** Files attached to this message. They can supply context, but only if the prompt uses them. */
   attachments: readonly Attachment[];
   /** Input tokens the attachments cost on the selected model. */

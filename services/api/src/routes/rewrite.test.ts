@@ -131,6 +131,13 @@ describe('rewrite prompt', () => {
     expect(buildRewriteUserMessage(request as never)).not.toContain('<attached_files>');
   });
 
+  it('tells the rewriter when the tool can read the project', () => {
+    expect(buildRewriteUserMessage({ ...request, workspace: true } as never)).toContain(
+      "Where it runs: a tool that can read the user's project files",
+    );
+    expect(buildRewriteUserMessage(request as never)).not.toContain('Where it runs');
+  });
+
   it('rejects oversized attachment lists and extra fields', async () => {
     const { app } = makeApp({ rewriter: new FakeRewriter(() => outcome) });
     const many = Array.from({ length: 11 }, (_, i) => ({ name: `f${i}.txt`, kind: 'text' }));

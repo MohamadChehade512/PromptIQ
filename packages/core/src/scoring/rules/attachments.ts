@@ -63,7 +63,7 @@ export const attachmentRules: Rule[] = [
       if (attachments.some((a) => a.textChars >= 300)) return null;
       return {
         penalty: 0.35,
-        message: `The prompt refers to ${ref}, but only ${attachments.length === 1 ? 'an image is' : 'images are'} attached, which PromptGenius can't read to check.`,
+        message: `The prompt refers to ${ref}, but only ${attachments.length === 1 ? 'an image is' : 'images are'} attached, which Prompt IQ can't read to check.`,
         suggestion:
           'Attach the document itself (PDF, Word or text). If the image is a photo of it, a text version reads more reliably and usually costs fewer tokens.',
       };

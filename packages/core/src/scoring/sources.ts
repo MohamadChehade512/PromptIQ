@@ -71,6 +71,11 @@ export const S = {
     title: 'PDF support: estimate your costs',
     url: 'https://platform.claude.com/docs/en/build-with-claude/pdf-support',
   },
+  claudeCodeBestPractices: {
+    publisher: 'Anthropic',
+    title: 'Best practices for Claude Code',
+    url: 'https://code.claude.com/docs/en/best-practices',
+  },
   anthropicPricing: {
     publisher: 'Anthropic',
     title: 'Pricing',
@@ -87,6 +92,11 @@ export const S = {
     publisher: 'OpenAI',
     title: 'Best practices for prompt engineering with the OpenAI API',
     url: 'https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api',
+  },
+  openaiCodex: {
+    publisher: 'OpenAI',
+    title: 'Codex best practices',
+    url: 'https://developers.openai.com/codex/learn/best-practices',
   },
   openaiGpt5: {
     publisher: 'OpenAI',
@@ -139,6 +149,12 @@ export const S = {
     publisher: 'Google',
     title: 'Prompt Engineering whitepaper (Boonstra, 2024)',
     url: 'https://www.kaggle.com/whitepaper-prompt-engineering',
+  },
+
+  githubCopilot: {
+    publisher: 'Microsoft',
+    title: 'GitHub Copilot: best practices',
+    url: 'https://docs.github.com/en/copilot/get-started/best-practices',
   },
 
   // Microsoft

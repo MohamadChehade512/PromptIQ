@@ -1,4 +1,4 @@
-# PromptGenius
+# Prompt IQ
 
 Build better prompts for **Claude**, **ChatGPT** and **Gemini**: live token, cost and context
 estimates, plus a 0–100 prompt score with concrete suggestions. Attach PDFs, Word files, images
@@ -42,6 +42,14 @@ spend limit in the Anthropic Console as a backstop.
 | `pnpm build`                                 | Production build of the web app                                   |
 | `pnpm format`                                | Formats the repo with Prettier                                    |
 | `pnpm --filter @promptgenius/core calibrate` | Prints the scoring calibration table (PLAN.md §2.7)               |
+
+## Brand
+
+The original logo artwork is [`docs/brand/prompt-iq-logo.png`](docs/brand/prompt-iq-logo.png).
+Vector versions traced from it live in `apps/web/public/`: `logo-mark.svg` (icon, also the
+favicon), `logo.svg` (horizontal) and `logo-stacked.svg` (icon above the name). In the app, the
+mark is `apps/web/src/components/Logo.tsx`. Brand colours: cyan `#01CCFF` → blue `#0072FA` →
+violet `#AC35FE`; wordmark navy `#0B1A2E`.
 
 ## Updating prices and models
 

@@ -9,9 +9,6 @@ const FILLER = [
   'could you please',
   'can you please',
   'would you please',
-  'could you',
-  'can you',
-  'would you',
   'i was wondering if',
   'i was wondering',
   'would you mind',
@@ -66,8 +63,10 @@ export const economyRules: Rule[] = [
       const { hits, words } = countPhrases(features.instructionLower, FILLER);
       const ratio = words / total;
       if (ratio <= 0.05) return null;
+      // Two courtesy words in a short prompt are a high share but cost almost nothing, so
+      // weigh the share by how much filler there actually is (full weight from 6 words).
       return {
-        penalty: Math.min(0.6, (ratio - 0.03) * 4),
+        penalty: Math.min(0.6, (ratio - 0.03) * 4) * Math.min(1, words / 6),
         message: `${words} of ${total} instruction words are filler, which adds tokens on every turn without adding signal.`,
         suggestion:
           'Cut courtesy and hedging phrases; state the request directly. Models don\'t need "please" to comply.',

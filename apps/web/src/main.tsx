@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { EntryGate } from './components/EntryGate';
 import { applyThemeChoice, readThemeChoice } from './lib/theme';
+import '@fontsource-variable/plus-jakarta-sans';
 import './styles.css';
 
 // Apply a saved light/dark choice before the first paint.

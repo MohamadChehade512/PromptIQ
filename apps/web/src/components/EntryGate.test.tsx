@@ -30,7 +30,7 @@ function fill(name: string, email: string, agree: boolean) {
 describe('Entry gate', () => {
   it('shows a loading screen, then the terms', async () => {
     renderGate();
-    expect(screen.getByRole('status').textContent).toContain('Loading PromptGenius');
+    expect(screen.getByRole('status').textContent).toContain('Loading Prompt IQ');
     expect(await screen.findByRole('heading', { name: 'Before you start' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Terms of use' })).toBeTruthy();
     expect(screen.queryByText(/Welcome,/)).toBeNull();
@@ -93,12 +93,12 @@ describe('Tutorial', () => {
   it('starts after agreeing and steps through each part with Next', () => {
     installFakeApi();
     render(<App agreement={agreement} />);
-    const dialog = screen.getByRole('dialog', { name: 'Welcome to PromptGenius' });
+    const dialog = screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' });
     expect(dialog.textContent).toContain('Step 1 of');
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByRole('dialog', { name: 'Simple or Advanced' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('dialog', { name: 'Welcome to PromptGenius' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' })).toBeTruthy();
   });
 
   it('every step points at a part that exists on the page', () => {
@@ -117,13 +117,14 @@ describe('Tutorial', () => {
       'prompt',
       'attachments',
       'conversation',
+      'workspace',
       'score',
       'usage',
       'rewrite',
     ]) {
       expect(container.querySelector(`[data-tour="${target}"]`)).toBeTruthy();
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Start using PromptGenius' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start using Prompt IQ' }));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -137,7 +138,7 @@ describe('Tutorial', () => {
     render(<App agreement={agreement} />);
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Show tutorial' }));
-    expect(screen.getByRole('dialog', { name: 'Welcome to PromptGenius' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' })).toBeTruthy();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();
   });

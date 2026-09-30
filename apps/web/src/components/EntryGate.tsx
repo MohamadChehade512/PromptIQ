@@ -21,7 +21,7 @@ function LoadingScreen() {
       <div className="entry-progress" aria-hidden="true">
         <span />
       </div>
-      <span className="entry-status">Loading PromptGenius…</span>
+      <span className="entry-status">Loading Prompt IQ…</span>
     </div>
   );
 }

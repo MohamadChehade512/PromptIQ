@@ -10,6 +10,13 @@ function type(text: string) {
 }
 
 describe('App (Simple mode)', () => {
+  it('shows the tagline and the app version', () => {
+    installFakeApi();
+    render(<App />);
+    expect(screen.getByText(/Build better prompts for Claude/)).toBeTruthy();
+    expect(screen.getByText(`Version ${__APP_VERSION__}`)).toBeTruthy();
+  });
+
   it('shows score, tokens and relative usage as you type', async () => {
     installFakeApi();
     render(<App />);
@@ -285,5 +292,28 @@ describe('Removing a file updates the score', () => {
     await waitFor(() =>
       expect(Number(/(\d+) out of/.exec(aria())![1])).toBeLessThan(withFile - 15),
     );
+  });
+});
+
+describe('Project access toggle', () => {
+  it('drops the "paste your code" checks and is remembered', async () => {
+    installFakeApi();
+    const { unmount } = render(<App />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Advanced' }));
+    type('Refactor src/utils/date.ts to use date-fns instead of moment. Make sure the tests pass.');
+    fireEvent.change(screen.getByLabelText('Use case'), { target: { value: 'coding' } });
+    expect(await screen.findByText('No language or stack.')).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('switch', { name: 'The AI can already see my project files' }),
+    );
+    await waitFor(() => expect(screen.queryByText('No language or stack.')).toBeNull());
+    expect(screen.getByText(/also read your files as they work/)).toBeTruthy();
+    unmount();
+    render(<App />);
+    expect(
+      screen.getByRole<HTMLInputElement>('switch', {
+        name: 'The AI can already see my project files',
+      }).checked,
+    ).toBe(true);
   });
 });

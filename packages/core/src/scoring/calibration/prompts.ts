@@ -13,6 +13,10 @@ export interface LabeledPrompt {
   historyTokens?: number;
   /** Files attached to the message (text as the browser would extract it). */
   attachments?: AttachmentSource[];
+  /** The AI tool already has the user's project files (Claude Code, Cursor, a Project). */
+  workspace?: boolean;
+  /** Held out from tuning: only used to check that rule changes generalize. */
+  split?: 'holdout' | 'holdout2';
 }
 
 const REPORT = `Q3 revenue was $4.2M, up 12% quarter over quarter, driven mainly by enterprise renewals (68% of new bookings). Gross margin fell from 71% to 66% because of higher cloud hosting costs after the EU region launch. Churn in the SMB segment rose to 3.1% monthly, versus 2.4% in Q2, concentrated in customers on the legacy Starter plan. Headcount grew from 84 to 97, mostly in sales. Cash on hand is $11.8M, giving roughly 22 months of runway at the current burn rate. The board approved a pricing change that moves Starter customers to the new Team plan in Q1.`;

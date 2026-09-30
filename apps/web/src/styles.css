@@ -8,10 +8,12 @@
   --muted: #6b6a66;
   --border: #e2e1dc;
   --grid: #e7e6e1;
-  --accent: #2a78d6;
+  /* Prompt IQ brand: cyan → blue → violet. The accent is the blue in the middle. */
+  --brand-gradient: linear-gradient(90deg, #01ccff 0%, #0072fa 45%, #ac35fe 100%);
+  --accent: #2f55f4;
   --accent-ink: #ffffff;
-  --accent-soft: #cde2fb;
-  --series-1: #2a78d6;
+  --accent-soft: #dde4ff;
+  --series-1: #2f55f4;
   --series-2: #eb6834;
   --error: #b42318;
   /* Score tones (status colors: reserved for the score, always paired with a label). */
@@ -41,10 +43,10 @@
     --muted: #9d9c93;
     --border: #2f2f2c;
     --grid: #2b2b29;
-    --accent: #3987e5;
+    --accent: #5b6dff;
     --accent-ink: #ffffff;
-    --accent-soft: #184f95;
-    --series-1: #3987e5;
+    --accent-soft: #252e6b;
+    --series-1: #5b6dff;
     --series-2: #d95926;
     --error: #f97066;
     --tone-good: #35c27b;
@@ -62,10 +64,10 @@
   --muted: #9d9c93;
   --border: #2f2f2c;
   --grid: #2b2b29;
-  --accent: #3987e5;
+  --accent: #5b6dff;
   --accent-ink: #ffffff;
-  --accent-soft: #184f95;
-  --series-1: #3987e5;
+  --accent-soft: #252e6b;
+  --series-1: #5b6dff;
   --series-2: #d95926;
   --error: #f97066;
   --tone-good: #35c27b;
@@ -853,6 +855,16 @@ summary {
 }
 .wordmark-accent {
   color: var(--accent);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@media (forced-colors: active) {
+  .wordmark-accent {
+    -webkit-text-fill-color: currentColor;
+    background: none;
+  }
 }
 .entry-brand .wordmark-text {
   font-size: 1.5rem;
@@ -951,6 +963,14 @@ input[aria-invalid='true'] {
     width: 100%;
     opacity: 0.6;
   }
+}
+
+.workspace {
+  margin-top: 14px;
+}
+.workspace .hint {
+  margin-top: 4px;
+  padding-left: 28px;
 }
 
 /* ---------- Attachments ---------- */
@@ -1057,26 +1077,46 @@ input[aria-invalid='true'] {
   inset: 0;
   z-index: 50;
 }
-.tour-backdrop,
+/*
+ * One spotlight element for the whole tour: its huge shadow dims the page and the hole
+ * shows the highlighted part. It moves with transform (GPU), so steps glide instead of
+ * jittering; steps with no target shrink it to an invisible point in the middle.
+ */
 .tour-spotlight {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
-}
-.tour-backdrop {
-  inset: 0;
-  background: rgb(0 0 0 / 0.55);
-}
-/* The dimmed page is the spotlight's huge shadow, so the highlighted part stays bright. */
-.tour-spotlight {
   border-radius: calc(var(--radius) + 4px);
   box-shadow:
     0 0 0 3px var(--accent),
-    0 0 0 9999px rgb(0 0 0 / 0.55);
+    0 0 0 200vmax rgb(0 0 0 / 0.55);
+  will-change: transform, width, height;
   transition:
-    top 200ms ease,
-    left 200ms ease,
-    width 200ms ease,
-    height 200ms ease;
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 200ms ease;
+}
+.tour-spotlight-empty {
+  box-shadow:
+    0 0 0 0 transparent,
+    0 0 0 200vmax rgb(0 0 0 / 0.55);
+}
+.tour-body {
+  display: grid;
+  gap: 10px;
+  animation: tour-fade 220ms ease both;
+}
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .tour-card {
   position: fixed;
@@ -1100,10 +1140,10 @@ input[aria-invalid='true'] {
   outline-offset: 2px;
 }
 .tour-bottom {
-  bottom: 24px;
+  bottom: 16px;
 }
 .tour-top {
-  top: 24px;
+  top: 16px;
 }
 .tour-center {
   top: 50%;
@@ -1148,4 +1188,531 @@ input[aria-invalid='true'] {
   .tour-spotlight {
     transition: none;
   }
+  .tour-body {
+    animation: none;
+  }
+}
+/* Keep the scrollbar's space when the tour holds the page still, so nothing shifts sideways. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* =====================================================================
+ * Design refresh (2026-09-30): Prompt IQ brand, typography and polish.
+ * Tokens first (light, then dark for both the system setting and the
+ * toggle), then components in page order. Later rules refine the base
+ * rules above; structure and accessibility are unchanged.
+ * ===================================================================== */
+:root {
+  --font: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --surface-2: #f2f4f9;
+  --text: #0b1a2e;
+  --text-2: #475267;
+  --muted: #667085;
+  --border: #e4e7ef;
+  --grid: #e9ecf3;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 10px 28px -18px rgb(15 23 42 / 0.22);
+  --shadow-pop: 0 18px 50px -20px rgb(15 23 42 / 0.35);
+  /* Buttons need white text to stay readable, so they use the deeper end of the brand. */
+  --button-gradient: linear-gradient(100deg, #0f62fe 0%, #4f3df0 55%, #8a2be2 100%);
+  --ring: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  --wash-1: color-mix(in srgb, #01ccff 9%, transparent);
+  --wash-2: color-mix(in srgb, #ac35fe 8%, transparent);
+  font-family: var(--font);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0b0e17;
+    --surface: #121726;
+    --surface-2: #1a2034;
+    --text: #f3f5fb;
+    --text-2: #b8c0d4;
+    --muted: #8e97ae;
+    --border: #262d45;
+    --grid: #232a40;
+    --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -20px rgb(0 0 0 / 0.7);
+    --shadow-pop: 0 22px 60px -20px rgb(0 0 0 / 0.8);
+    --wash-1: color-mix(in srgb, #01ccff 7%, transparent);
+    --wash-2: color-mix(in srgb, #ac35fe 9%, transparent);
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #0b0e17;
+  --surface: #121726;
+  --surface-2: #1a2034;
+  --text: #f3f5fb;
+  --text-2: #b8c0d4;
+  --muted: #8e97ae;
+  --border: #262d45;
+  --grid: #232a40;
+  --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -20px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 22px 60px -20px rgb(0 0 0 / 0.8);
+  --wash-1: color-mix(in srgb, #01ccff 7%, transparent);
+  --wash-2: color-mix(in srgb, #ac35fe 9%, transparent);
+}
+
+body {
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 480px at 8% -8%, var(--wash-1), transparent 65%),
+    radial-gradient(1000px 460px at 92% -10%, var(--wash-2), transparent 65%), var(--bg);
+  background-repeat: no-repeat;
+}
+h2 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hint {
+  line-height: 1.55;
+}
+
+/* ---------- App bar ---------- */
+.shell {
+  gap: 24px;
+  padding-top: 0;
+}
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 calc(-1 * clamp(16px, 3vw, 48px));
+  padding: 12px clamp(16px, 3vw, 48px);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+.top > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.top h1 {
+  font-size: 1.375rem;
+}
+.top .tagline {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+@media (max-width: 720px) {
+  .top .tagline {
+    font-size: 0.8125rem;
+  }
+}
+.wordmark-text {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  border-radius: var(--radius);
+  padding: 22px;
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+}
+.card h2 {
+  margin-bottom: 14px;
+}
+
+/* ---------- Segmented controls ---------- */
+.segmented {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+.segmented button {
+  border-radius: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+.segmented button:hover:not(.active) {
+  color: var(--text);
+}
+.segmented button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.08),
+    0 0 0 1px var(--border);
+}
+.segmented-lg button {
+  min-height: 44px;
+  font-size: 0.9375rem;
+}
+.segmented-lg button.active {
+  color: var(--accent);
+}
+
+/* ---------- Form fields ---------- */
+.field {
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+select,
+input:not([type='checkbox']):not([type='file']),
+textarea {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+  background-color: var(--surface);
+  min-height: 42px;
+  padding: 9px 12px;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+select:hover,
+input:not([type='checkbox']):not([type='file']):hover,
+textarea:hover {
+  border-color: color-mix(in srgb, var(--text) 22%, var(--border));
+}
+select:focus-visible,
+input:not([type='checkbox']):not([type='file']):focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* ---------- Prompt editor ---------- */
+.editor-label {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.editor textarea {
+  min-height: 240px;
+  font-size: 1rem;
+  line-height: 1.65;
+  padding: 14px 16px;
+}
+.editor-footer {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  border-radius: var(--radius-sm);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    filter 150ms ease,
+    background 150ms ease;
+}
+.button.primary {
+  background: var(--button-gradient);
+  color: #fff;
+  box-shadow: 0 8px 20px -10px color-mix(in srgb, #4f3df0 70%, transparent);
+}
+.button.primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -12px color-mix(in srgb, #4f3df0 80%, transparent);
+}
+.button.secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+.button.secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ---------- Attachments ---------- */
+.dropzone {
+  border: 1.5px dashed color-mix(in srgb, var(--text) 16%, var(--border));
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+.dropzone:hover,
+.dropzone.dragging {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+.dropzone-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+  flex: none;
+}
+.file {
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+/* ---------- Switch (project access) ---------- */
+.check input[role='switch'] {
+  appearance: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  flex: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 18%, var(--surface-2));
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+.check input[role='switch']::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: transform 180ms ease;
+}
+.check input[role='switch']:checked {
+  background: var(--accent);
+}
+.check input[role='switch']:checked::before {
+  transform: translateX(16px);
+}
+.check input[role='switch']:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.workspace .check span {
+  font-weight: 600;
+}
+.workspace .hint {
+  padding-left: 50px;
+}
+
+/* ---------- Score ---------- */
+.dial {
+  width: 124px;
+  height: 124px;
+}
+.dial-track {
+  stroke: var(--surface-2);
+}
+.dial-score {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.band {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px 4px 10px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--tone, var(--accent)) 14%, transparent);
+  margin-bottom: 8px;
+}
+.tone-dot {
+  margin-right: 7px;
+}
+.suggestions {
+  gap: 0;
+}
+.suggestion {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+}
+.suggestion:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.points {
+  align-self: start;
+  min-width: 38px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.8125rem;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.sources .sep {
+  display: none;
+}
+.sources a {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  text-decoration: none;
+  font-weight: 600;
+}
+.sources a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.bar-fill {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #01ccff, #2f55f4 55%, #8a2be2);
+}
+
+/* ---------- Usage ---------- */
+.stats {
+  gap: 10px;
+}
+.stats > div {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.stats dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.stats dd {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Paid rewrite: a gradient hairline marks the one paid feature ---------- */
+.card.rewrite {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(100deg, #01ccff, #4f3df0 55%, #ac35fe) border-box;
+}
+
+/* ---------- Footer ---------- */
+.bottom {
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+.bottom .version {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ---------- Dialogs and tour ---------- */
+.confirm,
+.tour-card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+}
+.entry-card {
+  box-shadow: var(--shadow-pop);
+}
+.terms {
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .segmented button,
+  .check input[role='switch'],
+  .check input[role='switch']::before {
+    transition: none;
+  }
+  .button.primary:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Usage tiles: readable labels, value and unit kept together. */
+.stats {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.stats dt {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.stats dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin-top: 4px;
+}
+.stats dd .unit {
+  font-size: 0.8125rem;
+}
+
+/* Phones: the app bar scrolls away with the page instead of taking a sticky strip. */
+@media (max-width: 720px) {
+  .top {
+    position: static;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: transparent;
+    padding-bottom: 14px;
+  }
+  .editor textarea {
+    min-height: 170px;
+    height: 180px;
+  }
+}
+
+/* Terms headings stay in sentence case: all-caps reads as shouting in legal text. */
+.terms h3 {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9375rem;
+  color: var(--text);
 }

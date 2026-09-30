@@ -35,6 +35,11 @@ export interface AnalysisInput {
    * resends them, so they count toward input cost, usage limits and the context window.
    */
   historyTokens?: number;
+  /**
+   * The AI tool can already see the user's project (Claude Code, Cursor, Copilot, Codex, a
+   * Claude or ChatGPT Project), so referring to files that aren't in the prompt is fine.
+   */
+  workspace?: boolean;
   /** Files attached to this message, summarized in the browser (see summarizeAttachment). */
   attachments?: readonly Attachment[];
   /** Exact counts, when a tokenizer or vendor API has provided them. */
@@ -78,6 +83,8 @@ export interface AnalysisResult {
   fileTokens: number;
   /** Earlier conversation resent with this message. */
   historyTokens: number;
+  /** The AI tool can read the user's project; it reads files on its own as it works. */
+  workspace: boolean;
   /** Everything sent with this message: fixed + history + files + prompt. */
   inputTokens: number;
   output: OutputEstimate;
@@ -209,6 +216,7 @@ export function analyzePrompt(input: AnalysisInput): AnalysisResult {
         tokens: promptTokens.tokens,
         reasoning,
         historyTokens,
+        workspace: !!input.workspace,
         attachments,
         attachmentTokens: fileTokens,
       })
@@ -248,6 +256,7 @@ export function analyzePrompt(input: AnalysisInput): AnalysisResult {
     files,
     fileTokens,
     historyTokens,
+    workspace: !!input.workspace,
     inputTokens,
     output,
     context: {

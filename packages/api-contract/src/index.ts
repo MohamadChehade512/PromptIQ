@@ -91,6 +91,8 @@ export const RewriteRequest = z
     findings: z
       .array(z.object({ ruleId: z.string().max(100), suggestion: z.string().max(500) }).strict())
       .max(30),
+    /** The target tool can already read the user's project (a coding agent or a Project). */
+    workspace: z.boolean().optional(),
     /**
      * Names and types of files the user will attach, so the rewrite can refer to them.
      * File contents are never sent: they stay in the browser.

@@ -1,6 +1,18 @@
 import { analyzePrompt } from '../../analyze';
 import { summarizeAttachment } from '../../attachments';
 import { CALIBRATION_SET, type Label, type LabeledPrompt } from './prompts';
+import { EXTENDED_SET } from './prompts-extended';
+
+/**
+ * Prompts the rules may be tuned against. Holdout v1 was scored blind once (78%) and then
+ * folded into tuning for round 2; holdout v2 is the current blind set.
+ */
+export const TUNING_SET: LabeledPrompt[] = [
+  ...CALIBRATION_SET,
+  ...EXTENDED_SET.filter((p) => p.split !== 'holdout2'),
+];
+/** Never tuned against: the honest measure of how well the scorer generalizes. */
+export const HOLDOUT_SET: LabeledPrompt[] = EXTENDED_SET.filter((p) => p.split === 'holdout2');
 
 /** Score range each human label should land in. */
 export const LABEL_RANGES: Record<Label, [number, number]> = {
@@ -53,7 +65,7 @@ function pearson(a: number[], b: number[]): number {
   return num / Math.sqrt(da * db);
 }
 
-export function runCalibration(set: LabeledPrompt[] = CALIBRATION_SET): CalibrationReport {
+export function runCalibration(set: LabeledPrompt[] = TUNING_SET): CalibrationReport {
   const rows = set.map((p) => {
     const result = analyzePrompt({
       platform: p.platform,
@@ -61,6 +73,7 @@ export function runCalibration(set: LabeledPrompt[] = CALIBRATION_SET): Calibrat
       mode: 'simple',
       prompt: p.prompt,
       historyTokens: p.historyTokens,
+      workspace: p.workspace,
       attachments: p.attachments?.map(summarizeAttachment),
     });
     const score = result.score?.total ?? 0;

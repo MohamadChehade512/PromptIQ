@@ -58,6 +58,7 @@ export function RewritePanel(props: {
         .filter((f) => !f.ruleId.startsWith('engine.'))
         .slice(0, 30)
         .map((f) => ({ ruleId: f.ruleId, suggestion: f.suggestion.slice(0, 500) })),
+      workspace: input.workspace || undefined,
       // Names and types only: file contents never leave the browser.
       attachments: analysis.files.length
         ? analysis.files.slice(0, 10).map((f) => ({ name: f.name.slice(0, 200), kind: f.kind }))
@@ -184,7 +185,7 @@ export function RewritePanel(props: {
           configured on this server. The exact cost is shown afterwards.
         </p>
         <p className="hint">
-          Your prompt isn't stored or logged by PromptGenius. You'll only be asked once per session.
+          Your prompt isn't stored or logged by Prompt IQ. You'll only be asked once per session.
         </p>
         <div className="dialog-actions">
           <button

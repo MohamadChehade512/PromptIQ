@@ -1,22 +1,22 @@
 import { useId } from 'react';
 
+const P_SHAPE =
+  'M507 268H700a201 201 0 0 1 0 402H592q-47 0-47 47v70H457q-60 0-60-60V378q0-110 110-110Z';
 const SPARK =
-  'M51 2.5C52.2 10 54 11.8 61.5 13 54 14.2 52.2 16 51 23.5 49.8 16 48 14.2 40.5 13 48 11.8 49.8 10 51 2.5Z';
+  'M885 207C893 250 905 262 952 272 905 282 893 294 885 337 877 294 865 282 818 272 865 262 877 250 885 207Z';
 
 /**
- * The PromptGenius mark: a chat bubble (the prompt) holding a `>_` cursor, with a spark
- * (the "genius"). Same artwork as public/logo-mark.svg; ids are unique per instance so
- * several logos can share a page.
+ * The Prompt IQ mark: a P-shaped speech bubble (the prompt) with rising bars (the score)
+ * and a spark. Same artwork as public/logo-mark.svg, traced from docs/brand/prompt-iq-logo.png.
+ * Gradient ids are unique per instance so several logos can share a page.
  */
 export function Logo({ size = 32, title }: { size?: number; title?: string }) {
   const id = useId();
-  const bubble = `${id}-bubble`;
-  const spark = `${id}-spark`;
-  const gap = `${id}-gap`;
+  const g = (name: string) => `${id}-${name}`;
   return (
     <svg
       className="logo"
-      viewBox="0 0 64 64"
+      viewBox="380 190 600 610"
       width={size}
       height={size}
       role={title ? 'img' : undefined}
@@ -24,46 +24,91 @@ export function Logo({ size = 32, title }: { size?: number; title?: string }) {
       aria-hidden={title ? undefined : true}
     >
       <defs>
-        <linearGradient id={bubble} x1="6" y1="10" x2="52" y2="58" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#3b8bea" />
-          <stop offset="1" stopColor="#1d5bb5" />
+        <linearGradient
+          id={g('p')}
+          x1="397"
+          y1="268"
+          x2="893"
+          y2="700"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#01ccff" />
+          <stop offset="0.35" stopColor="#2782fe" />
+          <stop offset="0.7" stopColor="#834ffc" />
+          <stop offset="1" stopColor="#ac38fd" />
         </linearGradient>
-        <linearGradient id={spark} x1="41" y1="2" x2="61" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#ffd35c" />
-          <stop offset="1" stopColor="#f29f05" />
+        <linearGradient
+          id={g('low')}
+          x1="397"
+          y1="560"
+          x2="720"
+          y2="787"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#2125d9" />
+          <stop offset="0.55" stopColor="#3c26ed" />
+          <stop offset="1" stopColor="#6a27fa" />
         </linearGradient>
-        <mask id={gap}>
-          <rect width="64" height="64" fill="#fff" />
-          <path d={SPARK} fill="#000" stroke="#000" strokeWidth="5" strokeLinejoin="round" />
+        <linearGradient
+          id={g('fold')}
+          x1="420"
+          y1="380"
+          x2="520"
+          y2="787"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#001776" />
+          <stop offset="0.6" stopColor="#0029bc" />
+          <stop offset="1" stopColor="#011986" />
+        </linearGradient>
+        <linearGradient
+          id={g('fade')}
+          x1="0"
+          y1="500"
+          x2="0"
+          y2="720"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="1" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
+        <mask id={g('mask')} maskUnits="userSpaceOnUse" x="380" y="190" width="600" height="610">
+          <rect x="380" y="190" width="600" height="610" fill={`url(#${g('fade')})`} />
         </mask>
+        <linearGradient
+          id={g('spark')}
+          x1="818"
+          y1="207"
+          x2="952"
+          y2="337"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#5530ef" />
+          <stop offset="1" stopColor="#6a3cf5" />
+        </linearGradient>
       </defs>
-      <g mask={`url(#${gap})`}>
-        <path
-          d="M18 10h22a12 12 0 0 1 12 12v14a12 12 0 0 1-12 12H26l-11.5 9.2c-1 .8-2.4 0-2.2-1.3L13.6 47A12 12 0 0 1 6 36V22a12 12 0 0 1 12-12Z"
-          fill={`url(#${bubble})`}
-        />
-      </g>
+      <path fill={`url(#${g('p')})`} d={P_SHAPE} />
+      <path fill={`url(#${g('low')})`} mask={`url(#${g('mask')})`} d={P_SHAPE} />
       <path
-        d="M17.5 23l8 6-8 6"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill={`url(#${g('fold')})`}
+        d="M397 505C412 440 455 385 540 352L503 389V677L545 717V787H503C472 722 436 668 397 622Z"
       />
-      <path d="M30 35h10" fill="none" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
-      <path d={SPARK} fill={`url(#${spark})`} />
+      <path fill="#fff" d="M540 352H700a117 117 0 0 1 0 235H594l-91 90V389q0-37 37-37Z" />
+      <rect x="568" y="483" width="42" height="66" rx="11" fill="#009ffd" />
+      <rect x="633" y="445" width="42" height="104" rx="11" fill="#065ff7" />
+      <rect x="698" y="405" width="42" height="144" rx="11" fill="#662ff9" />
+      <path fill={`url(#${g('spark')})`} d={SPARK} />
     </svg>
   );
 }
 
-/** Mark + "PromptGenius" wordmark, with "Genius" in the accent color. */
+/** Mark + "Prompt IQ" wordmark, with "IQ" in the brand gradient. */
 export function Wordmark({ size = 32 }: { size?: number }) {
   return (
     <span className="wordmark">
       <Logo size={size} />
       <span className="wordmark-text">
-        Prompt<span className="wordmark-accent">Genius</span>
+        Prompt <span className="wordmark-accent">IQ</span>
       </span>
     </span>
   );

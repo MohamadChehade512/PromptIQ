@@ -1,4 +1,5 @@
 import { findTerms } from '../../text/analyze';
+import { UNBOUNDED_RE } from './output';
 import { S } from '../sources';
 import type { Rule } from '../types';
 import {
@@ -42,7 +43,7 @@ const GENERIC_ASK_RE =
 const REFERENT_RE =
   /\b(?:the above|below|attached|(?:the|my|our|this|these) (?:article|text|document|doc|email|emails|report|file|code|essay|paper|message|messages|data|spreadsheet|pdf|link|info|information|notes))\b/;
 /** A bare "it/this" is only a dangling reference when there's almost nothing else to go on. */
-const BARE_PRONOUN_RE = /\b(?:this|these|it|that)\b/;
+const BARE_PRONOUN_RE = /\b(?:this|these|it|that|one|them|those)\b/;
 const WANTS_BRIEF_RE =
   /\b(?:brief(?:ly)?|concise(?:ly)?|succinct(?:ly)?|tl;?dr|as short as possible|keep it short)\b/;
 const WANTS_LONG_RE =
@@ -131,7 +132,8 @@ export const clarityRules: Rule[] = [
       const ref =
         REFERENT_RE.exec(features.instructionLower)?.[0] ??
         materialReference(features) ??
-        (features.instructionWords.length < 10
+        // "Is it better to rent or buy?" names its topic; "which one should I pick?" doesn't.
+        (features.instructionWords.length < 10 && subjectWords(features).length < 2
           ? BARE_PRONOUN_RE.exec(features.instructionLower)?.[0]
           : undefined);
       if (!ref) return null;
@@ -222,6 +224,46 @@ export const clarityRules: Rule[] = [
             evidence: [m[1]!],
           }
         : null;
+    },
+  },
+  {
+    id: 'clarity.shouting',
+    dimension: 'clarity',
+    title: 'Shouting instead of detail',
+    sources: [S.anthropicEmphasis, S.geminiStrategies, S.openaiGpt5],
+    evaluate: ({ features }) => {
+      const letters = features.instructionText.match(/\p{L}/gu) ?? [];
+      const upper = features.instructionText.match(/\p{Lu}/gu) ?? [];
+      const bangs = features.instructionText.match(/!{2,}/g)?.length ?? 0;
+      if (letters.length < 15 || upper.length / letters.length < 0.6) return null;
+      return {
+        penalty: bangs > 0 ? 0.45 : 0.3,
+        message:
+          'The prompt is written in capitals' +
+          (bangs > 0 ? ' with "!!!"' : '') +
+          '. Urgency adds no information, and vendors warn it makes models overreact.',
+        suggestion:
+          'Write it in normal case and replace the emphasis with the details that matter: what it is for, who reads it, and what "perfect" means here.',
+      };
+    },
+  },
+  {
+    id: 'clarity.no-focus',
+    dimension: 'clarity',
+    title: 'Asks for everything',
+    sources: [S.openaiBestPractices, S.dairTips, S.anthropicClear],
+    evaluate: ({ features }) => {
+      const m = UNBOUNDED_RE.exec(features.instructionLower);
+      // A long, specific prompt can ask for thoroughness; a one-liner asking for
+      // "everything about history" has no question in it.
+      if (!m || features.instructionWords.length >= 30) return null;
+      return {
+        penalty: 0.4,
+        message: `"${m[0]}" about a broad topic isn't a question: the model has to pick what matters to you.`,
+        suggestion:
+          'Ask the specific question behind it, e.g. "What caused the 2008 crash, in 3 bullet points?"',
+        evidence: [m[0]],
+      };
     },
   },
   {

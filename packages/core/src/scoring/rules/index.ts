@@ -1,4 +1,5 @@
 import type { Rule } from '../types';
+import { agentRules } from './agent';
 import { attachmentRules } from './attachments';
 import { clarityRules } from './clarity';
 import { contextRules } from './context';
@@ -20,4 +21,5 @@ export const ALL_RULES: readonly Rule[] = [
   ...openaiRules,
   ...geminiRules,
   ...attachmentRules,
+  ...agentRules,
 ];

@@ -9,10 +9,10 @@ export function TermsText() {
     <>
       <p className="muted">Last updated {TERMS_VERSION}</p>
 
-      <h3>1. What PromptGenius does</h3>
+      <h3>1. What Prompt IQ does</h3>
       <p>
-        PromptGenius estimates how many tokens, how much context and roughly what cost a prompt uses
-        on Claude, ChatGPT and Gemini, and scores it against those vendors' published prompting
+        Prompt IQ estimates how many tokens, how much context and roughly what cost a prompt uses on
+        Claude, ChatGPT and Gemini, and scores it against those vendors' published prompting
         guidance. Estimates and scores are guidance, not bills or guarantees: vendors change their
         prices, limits and models often, and your actual usage may differ.
       </p>
@@ -45,15 +45,15 @@ export function TermsText() {
 
       <h3>5. Acceptable use</h3>
       <p>
-        Don't use PromptGenius to create unlawful or harmful content, to get around the rewrite
-        limits, to overload the service, or to scrape it automatically. We may restrict access that
-        breaks these rules.
+        Don't use Prompt IQ to create unlawful or harmful content, to get around the rewrite limits,
+        to overload the service, or to scrape it automatically. We may restrict access that breaks
+        these rules.
       </p>
 
       <h3>6. No warranty</h3>
       <p>
-        PromptGenius is provided "as is", without warranties of any kind. To the extent the law
-        allows, we aren't liable for decisions or costs based on its estimates, scores or rewrites.
+        Prompt IQ is provided "as is", without warranties of any kind. To the extent the law allows,
+        we aren't liable for decisions or costs based on its estimates, scores or rewrites.
       </p>
 
       <h3>7. Changes</h3>

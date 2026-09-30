@@ -19,6 +19,7 @@ import { AttachmentsInput } from './components/AttachmentsInput';
 import { Wordmark } from './components/Logo';
 import { Controls } from './components/Controls';
 import { ConversationInput } from './components/ConversationInput';
+import { WorkspaceToggle } from './components/WorkspaceToggle';
 import { PromptEditor } from './components/PromptEditor';
 import { RewritePanel } from './components/RewritePanel';
 import { ScorePanel } from './components/ScorePanel';
@@ -67,6 +68,7 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
   const [attachmentTokens, setAttachmentTokens] = usePersistentState('pg.attachments', 0);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [historyTokens, setHistoryTokens] = useState(0);
+  const [workspace, setWorkspace] = usePersistentState('pg.workspace', false);
   const [prompt, setPrompt] = useState('');
   const files = useAttachments();
   // The tour runs once, right after someone first agrees to the terms; replayable from the footer.
@@ -119,6 +121,7 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
       turns,
       planId,
       historyTokens,
+      workspace,
       attachments: files.attachments,
       exactPromptTokens: promptCount.count,
       exactSystemTokens: systemCount.count?.tokens,
@@ -135,6 +138,7 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
       turns,
       planId,
       historyTokens,
+      workspace,
       files.attachments,
       promptCount.count,
       systemCount.count,
@@ -200,6 +204,7 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
               simple={!advanced}
             />
             <ConversationInput tokens={historyTokens} onChange={setHistoryTokens} />
+            <WorkspaceToggle value={workspace} onChange={setWorkspace} />
           </section>
 
           {advanced && (
@@ -239,6 +244,7 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
         <button type="button" className="link-button" onClick={() => setTouring(true)}>
           Show tutorial
         </button>
+        <span className="version">Version {__APP_VERSION__}</span>
         {props.agreement && (
           <span>
             Agreed to the terms as {props.agreement.name}

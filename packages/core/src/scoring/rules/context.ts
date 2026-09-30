@@ -13,9 +13,35 @@ import {
 const PURPOSE_RE =
   /\b(?:because|so that|so i can|so we can|in order to|the goal|my goal|our goal|purpose|objective|i'?m (?:working|building|writing|trying|preparing|creating|planning|studying|learning|applying|running)|we'?re (?:working|building|launching|planning)|i am|we are|this (?:is|will be) (?:for|used)|to be used|for (?:my|our) (?!thing\b|stuff\b)[a-z]+|context:|background:|use case|(?:is|are|am) (?:preparing|building|working on|writing|planning|launching|creating|migrating|applying)|matters|is important|will (?:read|use|see) (?:it|this)|goal is|so (?:the|that|it|we|i|they|you|nothing|fewer|more)|(?:applying|preparing|studying) (?:to|for)|i'?m (?:a|an) [a-z-]+|i'?m [a-z]+ing|we'?re [a-z]+ing|for (?:a|an|the|my|our) (?:[\w-]+\s+){0,4}(?:role|job|position|application|internship|interview|program|programme|scholarship|class|course|client|clients|team|company|posting|opening|promotion|grant|conference|journal|launch|campaign)s?|apply(?:ing)? (?:to|for)|(?:to|so i can|so we can|in order to) (?:get|land|win|pass|apply|impress|convince))\b/;
 const PROBLEM_RE =
-  /\b(?:but|however|currently|right now|keeps|sometimes|fails?|failing|errors?|bug|issue|problem|broken|instead of|crash(?:es)?|slow)\b/;
+  /\b(?:but|however|currently|right now|keeps|sometimes|fails?|failing|errors?|bug|issue|problem|broken|instead of|crash(?:es)?|slow|leaks?|leaking|stuck|hangs?|timeouts?|times out|runs? out of|deadlocks?|race condition|flaky|throws?|exception|unexpected|incorrect|wrong)\b/;
+/** First-person situation: "I'm 34, rent in Toronto…", "we mostly use email…". Background is context. */
+const SITUATION_RE =
+  /\b(?:i'?m \d+|i am \d+|i'?m (?:the|a|an|my|our|his|her|their) [\w-]+|i am (?:the|a|an|my|our) [\w-]+|(?:i|we) (?:have|had|plan|use|run|own|work|live|rent|earn|make|manage|teach|study|mostly|currently|already|just)|our \d+[- ](?:person|people|member|employee)|my (?:doctor|boss|manager|teacher|client|landlord|team))\b/;
 const AUDIENCE_RE =
-  /\b(?:audience|readers?|for (?:beginners|experts|students|kids|children|executives|developers|engineers|customers|clients|investors|recruiters|managers|parents|teachers|non-technical|technical)|my (?:team|boss|manager|class|students|clients|customers|followers)|non-technical|technical|beginners?|experts?|stakeholders?|tone|voice|formal|casual|professional|friendly|vibe|feel|brand|advising|recruiters?|hiring managers?|employers?|applicant tracking(?: systems?)?|ats|admissions(?: officers?| committees?)?|interviewers?|reviewers?|examiners?|graders?|for (?:my|our|the|a|an) (?:[\w-]+\s+){0,3}(?:team|board|class|students|clients|customers|investors|executives|leadership|managers?|colleagues|audience|readers|users|community|followers|members|staff|department|committee|panel))\b/;
+  /\b(?:audience|readers?|for (?:beginners|experts|students|kids|children|executives|developers|engineers|customers|clients|investors|recruiters|managers|parents|teachers|non-technical|technical)|my (?:team|boss|manager|class|students|clients|customers|followers)|non-technical|technical|beginners?|experts?|stakeholders?|tone|voice|formal|casual|professional|friendly|vibe|feel|brand|advising|guests|crowd|attendees|colleagues|coworkers|co-workers|families|seniors|parents|neighbou?rs|subscribers|donors|volunteers|fans|shoppers|patients|recruiters?|hiring managers?|employers?|applicant tracking(?: systems?)?|ats|admissions(?: officers?| committees?)?|interviewers?|reviewers?|examiners?|graders?|(?:for|to) (?:(?:my|our|the|a|an|all) )?(?:[\w-]+\s+){0,3}(?:team|board|class|students|clients|customers|investors|executives|leadership|managers?|colleagues|audience|readers|users|community|followers|members|staff|department|committee|panel))\b/;
+/** Something is wrong with "my app / our API / my code". */
+const DEBUG_RE =
+  /\b(?:slow|laggy|(?:doesn'?t|does not|isn'?t|is not|won'?t|not) (?:work|working|load|loading|run|running|compile|compiling|start)|broken|crash(?:es|ing|ed)?|errors?|bugs?|buggy|fails?|failing|hangs?|freez(?:es|ing)|leaks?|leaking|stuck|throws?|exceptions?)\b/;
+const OWN_THING_RE =
+  /\b(?:my|our)\s+(?:[\w.+#-]+\s+){0,3}?(?:app|apps|application|code|site|website|program|script|function|query|build|server|service|api|component|page|project|tests?|pipeline|deploy(?:ment)?|container|database|db|model|notebook|game|bot|extension|plugin|backend|frontend)\b/;
+const QUOTED_ERROR_RE = /["“`][^"”`\n]{8,}["”`]|\b(?:error|exception|traceback)\b\s*[:(]/i;
+/** A specific person the piece is for or about. */
+const RELATION_RE =
+  /\b(?:my|our) (?:grand(?:mother|father|ma|pa|parents?)|mother|mom|mum|father|dad|parents?|brother|sister|siblings?|son|daughter|kids?|children|wife|husband|partner|fianc[eé]e?|friend|best friend|uncle|aunt|cousin|niece|nephew|boss|manager|colleague|coworker|teacher|mentor|coach|neighbou?r|dog|cat)\b/;
+/** Conceptual questions ("what is…", "difference between…") that don't depend on a stack. */
+function isConceptQuestion(features: { instructionLower: string }): boolean {
+  const l = features.instructionLower.trim();
+  return (
+    /^(?:what(?:'s| is| are)|how does|how do|why (?:is|are|do|does)|explain|when should)\b/.test(
+      l,
+    ) &&
+    !/\b(?:my|our|this|these)\b/.test(l) &&
+    !/\b(?:write|build|create|implement|fix|debug|code)\b/.test(l)
+  );
+}
+/** Writing that only works with the author's own facts. */
+const PERSONAL_PIECE_RE =
+  /\b(?:cover letter|resume|cv|bio|biography|speech|toast|eulogy|vows|thank[- ]you (?:note|letter|email|card)|apology|letter of recommendation|recommendation letter|personal statement|wedding|birthday|retirement|condolence|obituary|about (?:me|us|my (?:company|business|startup|shop)))\b/;
 const AUDIENCE_USE_CASES = new Set(['writing', 'analysis', 'summarization', 'brainstorming']);
 const CODE_FILE_RE =
   /\.(?:py|ipynb|js|mjs|cjs|ts|tsx|jsx|java|kt|kts|scala|c|h|cpp|hpp|cc|cs|go|rb|php|rs|swift|sql|sh|r|dart|lua|vue|svelte)$/i;
@@ -31,6 +57,7 @@ export const contextRules: Rule[] = [
     evaluate: ({ features, useCase }) => {
       if (
         PURPOSE_RE.test(features.instructionLower) ||
+        SITUATION_RE.test(features.instructionLower) ||
         (useCase === 'coding' && PROBLEM_RE.test(features.instructionLower))
       )
         return null;
@@ -44,7 +71,7 @@ export const contextRules: Rule[] = [
         };
       }
       return {
-        penalty: useCase === 'qa' && !isProductionTask(features) ? 0.25 : 0.45,
+        penalty: useCase === 'qa' && !isProductionTask(features) ? 0.35 : 0.45,
         message: "The prompt doesn't say why you need this or what it's for.",
         suggestion:
           'Add one sentence of context, e.g. "This is for a README aimed at new contributors, so…". Models generalize better when they know the goal.',
@@ -81,7 +108,20 @@ export const contextRules: Rule[] = [
       // A file the prompt points at carries the specifics.
       if (fileUse(ctx).substantive) return null;
       const subject = subjectWords(features).length;
-      if (subject >= 6) return null;
+      const personal = PERSONAL_PIECE_RE.exec(features.instructionLower);
+      if (subject >= 6 && !personal) return null;
+      if (personal) {
+        // A cover letter or a toast is made of facts only you know. Naming who it's for
+        // ("my grandmother", "my brother Sam") is a start, not the whole story.
+        const named = RELATION_RE.test(features.instructionLower);
+        return {
+          penalty: named ? 0.4 : 0.7,
+          message: `A ${personal[0]} depends on facts only you know (names, roles, stories, dates), and the prompt gives none.`,
+          suggestion:
+            'Add the specifics: who it is for and about, 2–3 real details or stories to include, and the occasion or role.',
+          evidence: [personal[0]],
+        };
+      }
       return {
         penalty: subject <= 2 ? 0.45 : 0.25,
         message:
@@ -101,7 +141,9 @@ export const contextRules: Rule[] = [
       STACK_RE.test(features.lower) ||
       features.codeBlocks > 0 ||
       // An attached source file shows its language and libraries.
-      attachments.some((a) => CODE_FILE_RE.test(a.name))
+      attachments.some((a) => CODE_FILE_RE.test(a.name)) ||
+      // "What's the difference between a process and a thread?" is language-agnostic.
+      isConceptQuestion(features)
         ? null
         : {
             penalty: 0.45,
@@ -129,6 +171,32 @@ export const contextRules: Rule[] = [
           : "There's no text to work on in the prompt.",
         suggestion:
           'Attach the file, or paste the source text wrapped in tags like <document>…</document> before your instruction.',
+      };
+    },
+  },
+  {
+    id: 'context.no-repro',
+    dimension: 'context',
+    title: 'Nothing to diagnose',
+    sources: [S.openaiBestPractices, S.googleWhitepaper, S.microsoftPromptEng],
+    useCases: ['coding', 'qa'],
+    evaluate: ({ features, attachments, historyTokens }) => {
+      const lower = features.instructionLower;
+      const thing = OWN_THING_RE.exec(lower);
+      if (!thing || !DEBUG_RE.test(lower)) return null;
+      if (hasMaterial(features) || attachments.length > 0 || historyTokens > 0) return null;
+      // A detailed write-up (versions, numbers, what was tried) is a repro in words.
+      if (features.instructionWords.length >= 40 && concreteDetails(features).length >= 3)
+        return null;
+      const quotedError = QUOTED_ERROR_RE.test(features.instructionText);
+      return {
+        penalty: quotedError ? 0.3 : 0.7,
+        message: quotedError
+          ? `There's an error message, but not the code that triggers it or what you expected ${thing[0]} to do.`
+          : `The prompt says something is wrong with ${thing[0]} but includes no code, error message or symptoms to go on.`,
+        suggestion:
+          'Paste the smallest code that shows the problem, the exact error or measurement, what you expected, and the versions you use.',
+        evidence: [thing[0]],
       };
     },
   },

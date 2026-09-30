@@ -1,10 +1,13 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
+import pkg from './package.json' with { type: 'json' };
 
 const apiPort = process.env.API_PORT ?? '8787';
 
 export default defineConfig({
   plugins: [react()],
+  // Shown in the footer; bump "version" in apps/web/package.json for each release.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: {
     port: 5173,
     strictPort: true,

@@ -85,6 +85,35 @@ export const TASK_VERBS = [
   'need',
   'want',
   'looking',
+  // Code changes
+  'rename',
+  'move',
+  'replace',
+  'extract',
+  'paginate',
+  'revert',
+  'merge',
+  'deploy',
+  'install',
+  'upgrade',
+  'bump',
+  'configure',
+  'integrate',
+  'connect',
+  'enable',
+  'disable',
+  'hide',
+  'toggle',
+  'sort',
+  'filter',
+  'validate',
+  'delete',
+  'center',
+  'align',
+  'resize',
+  'style',
+  'wire',
+  'set',
 ] as const;
 
 const TASK_VERB_RE = new RegExp(`\\b(?:${TASK_VERBS.join('|')})\\b`);
@@ -209,7 +238,10 @@ export const STOPWORDS = new Set(
     'do does did have has had can could would should will shall may might must not no yes also just ' +
     'very really about into over under again further once here there when where why how all any both ' +
     'each few more most other some such only own same than too s t don now please like get got make ' +
-    "up out off one two three am im i'm let us thing things stuff something anything everything"
+    "up out off one two three am im i'm let us thing things stuff something anything everything " +
+    // Greetings and politeness say nothing about the topic.
+    'hi hello hey thanks thank appreciate appreciated grateful sorry wondering quick quickly asap kindly ' +
+    'much many lot lots'
   ).split(' '),
 );
 
@@ -222,7 +254,9 @@ const DELIVERABLES = new Set(
     'captions description descriptions plan plans outline answer answers response responses content copy ' +
     'document documents doc docs presentation slides lesson recipe recipes name names idea ideas analysis ' +
     'review question questions draft version bit piece words sentence sentences points bullets bullet ' +
-    'thread threads message messages info information help advice suggestions tips options'
+    'thread threads message messages info information help advice suggestions tips options ' +
+    // Hype about reach isn't a topic: "a social media post that will go viral".
+    'social media viral likes followers engagement views'
   ).split(' '),
 );
 
@@ -231,7 +265,7 @@ const EMPTY_MODIFIERS = new Set(
   (
     'good great nice short long quick simple detailed brief cool interesting new best better creative ' +
     'funny professional full complete small big little fun awesome amazing perfect proper decent random ' +
-    'general basic whole entire sure okay ok'
+    'general basic whole entire sure okay ok really super tons lots very nicer modern'
   ).split(' '),
 );
 

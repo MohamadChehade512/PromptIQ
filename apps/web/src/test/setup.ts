@@ -13,6 +13,9 @@ if (!('showModal' in HTMLDialogElement.prototype)) {
   });
 }
 
+// jsdom doesn't scroll; the tutorial jumps to each part it explains.
+window.scrollTo = () => {};
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

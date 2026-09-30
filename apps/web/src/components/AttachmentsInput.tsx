@@ -44,6 +44,16 @@ export function AttachmentsInput(props: {
           if (e.dataTransfer.files.length) props.onAdd([...e.dataTransfer.files]);
         }}
       >
+        <svg className="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v3.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         <button
           type="button"
           className="button secondary"

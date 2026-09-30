@@ -7,7 +7,11 @@ export function SourceLinks({ sources }: { sources: readonly Source[] }) {
       Sources:{' '}
       {sources.map((s, i) => (
         <span key={s.url}>
-          {i > 0 && ' · '}
+          {i > 0 && (
+            <span className="sep" aria-hidden="true">
+              {' · '}
+            </span>
+          )}
           <a href={s.url} target="_blank" rel="noreferrer noopener" title={s.title}>
             {s.publisher === 'Research' ? s.title.split(',')[0] : s.publisher}
           </a>

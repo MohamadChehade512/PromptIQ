@@ -127,6 +127,12 @@ export function UsagePanel(props: {
         </div>
       </dl>
       <p className="hint">{out.detail}</p>
+      {a.workspace && (
+        <p className="hint">
+          Coding tools and Projects also read your files as they work, so real usage will be higher
+          than this message alone. Pointing at the right files keeps it down.
+        </p>
+      )}
 
       <ContextBar a={a} />
 

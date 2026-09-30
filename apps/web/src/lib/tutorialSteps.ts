@@ -7,8 +7,8 @@ export interface TutorialStep {
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Welcome to PromptGenius',
-    body: 'PromptGenius helps you write better prompts for Claude, ChatGPT and Gemini. As you type, it estimates tokens, context and cost, and scores your prompt with suggestions to improve it. This quick tour shows what each part does.',
+    title: 'Welcome to Prompt IQ',
+    body: 'Prompt IQ helps you write better prompts for Claude, ChatGPT and Gemini. As you type, it estimates tokens, context and cost, and scores your prompt with suggestions to improve it. This quick tour shows what each part does.',
   },
   {
     target: 'mode',
@@ -34,6 +34,11 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     target: 'conversation',
     title: 'Say how far into the chat you are',
     body: 'Every message resends the whole conversation, so a long chat makes each new message cost more. Pick how much has been said already to get a realistic estimate.',
+  },
+  {
+    target: 'workspace',
+    title: 'Working in a coding tool?',
+    body: 'If the AI can already see your project (Claude Code, Cursor, Copilot, Codex, or a Claude/ChatGPT Project), turn this on. Prompt IQ stops asking you to paste code and checks instead that you say where to look, what’s wrong, and how to check the work.',
   },
   {
     target: 'score',
