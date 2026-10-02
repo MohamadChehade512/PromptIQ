@@ -1,6 +1,8 @@
 import {
   findAttachmentReferences,
+  stem,
   subjectOverlap,
+  type Attachment,
   type AttachmentReferences,
 } from '../../attachments';
 import { DATA_TAGS, type TextFeatures } from '../../text/analyze';
@@ -85,6 +87,17 @@ export const TASK_VERBS = [
   'need',
   'want',
   'looking',
+  // Asking the model to read or judge something
+  'read',
+  'assess',
+  'advise',
+  'examine',
+  'let me know',
+  'look over',
+  'look at',
+  'go over',
+  'go through',
+  'walk me through',
   // Code changes
   'rename',
   'move',
@@ -334,7 +347,7 @@ export function materialReference(f: TextFeatures): string | null {
 }
 
 const REVIEW_RE =
-  /\b(?:review|critique|proofread|edit|improve|feedback|evaluate|assess|grade|rate|check|polish|tailor|optimi[sz]e|fix|rewrite|revise|tighten|refine|look (?:over|at)|go over|what(?:'s| is) wrong|what to (?:improve|change|fix)|how (?:can|could|do|should) i improve)\b/;
+  /\b(?:how (?:well )?(?:it|this|they|my [\w-]+) (?:aligns?|fits?|matches|stacks? up|compares)|aligns? (?:with|to)|(?:good|strong|right) fit|review|critique|proofread|edit|improve|feedback|evaluate|assess|grade|rate|check|polish|tailor|optimi[sz]e|fix|rewrite|revise|tighten|refine|look (?:over|at)|go over|what(?:'s| is) wrong|what to (?:improve|change|fix)|how (?:can|could|do|should) i improve)\b/;
 
 /**
  * A request to judge or improve specific material ("review my resume", "fix this code").
@@ -380,6 +393,40 @@ const INSTRUCTION_FILE_REF_RE = new RegExp(
   `\\b(?:attached|this|the|these|that|uploaded|following)\\s+(?:[\\w-]+\\s+){0,2}?(?:${INSTRUCTION_FILE})\\b`,
 );
 
+const GENERIC_DOC_RE = /^(?:files?|documents?|docs?|pdfs?|data|work|texts?|writing|messages?)$/;
+const RESUME_NOUN_RE = /^(?:r[eé]sum[eé]|cv)$/;
+const RESUME_NAME_RE = /r[eé]sum[eé]|\bcv\b|curriculum/;
+/** Word stems that mark a résumé's content (education, experience, skills…). */
+const RESUME_STEMS = [
+  'exper',
+  'educa',
+  'skill',
+  'unive',
+  'inter',
+  'bache',
+  'degre',
+  'proje',
+  'certi',
+];
+
+/**
+ * The prompt names a specific kind of document ("my resume", "this essay") and an attached
+ * file is that document: its name or text has the noun, or (résumés) it reads like one.
+ */
+function referencedDocIsAttached(features: TextFeatures, attachments: readonly Attachment[]) {
+  const ref = materialReference(features);
+  if (!ref) return false;
+  const noun = ref.split(/\s+/).at(-1)!.replace(/s$/, '');
+  if (GENERIC_DOC_RE.test(noun)) return false;
+  const resume = RESUME_NOUN_RE.test(noun);
+  return attachments.some((a) => {
+    const name = a.name.toLowerCase();
+    if (name.includes(noun) || (resume && RESUME_NAME_RE.test(name))) return true;
+    if (a.terms.includes(stem(noun))) return true;
+    return resume && RESUME_STEMS.filter((s) => a.terms.includes(s)).length >= 3;
+  });
+}
+
 export function fileUse(ctx: Pick<RuleContext, 'attachments' | 'features'>): FileUse {
   const { attachments, features } = ctx;
   const lower = features.instructionLower;
@@ -396,7 +443,12 @@ export function fileUse(ctx: Pick<RuleContext, 'attachments' | 'features'>): Fil
   const subject = subjectWords(features);
   const implicit = attachments.length === 1 && subject.length < 2;
   const used = present && (refs.any || implicit);
-  const mismatch = used && subjectOverlap(subject, attachments) === 0;
+  // "My resume" + a résumé attached is a match even when the target ("a role at Google")
+  // isn't in it: comparing material against an outside goal is the point of the request.
+  const mismatch =
+    used &&
+    subjectOverlap(subject, attachments) === 0 &&
+    !referencedDocIsAttached(features, attachments);
 
   const readable = attachments.filter((a) => a.textChars >= 300);
   const images = attachments.filter((a) => a.kind === 'image');

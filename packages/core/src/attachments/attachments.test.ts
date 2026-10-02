@@ -237,6 +237,32 @@ describe('reviewing your own material (user report, 2026-09-24)', () => {
     );
   });
 
+  // User report (2026-10-02): adding "Can you" raised the score by ~23 points.
+  const ALIGN = 'read my resume and let me know how it aligns with a dev position at Google.';
+  const NAMELESS_RESUME: AttachmentSource = {
+    ...RESUME,
+    name: 'Mohamad Chehade.pdf',
+    text: 'Software Engineering Intern, Shopify: built React dashboards and a Node.js API. Projects: key-value store in Go. Skills: Java, Python, TypeScript, SQL, AWS. Education: BSc Computer Science, University of Waterloo. '.repeat(
+      3,
+    ),
+  };
+
+  it('scores "read my resume…" and "Can you read my resume…" the same', () => {
+    for (const files of [[], [NAMELESS_RESUME]]) {
+      const bare = score(ALIGN, files);
+      const asked = score(`Can you ${ALIGN}`, files);
+      expect(Math.abs(bare.total - asked.total)).toBeLessThanOrEqual(3);
+      expect(ids(bare)).not.toContain('clarity.no-task');
+    }
+  });
+
+  it('treats "how it aligns with a role" as a review of the attached resume, not a mismatch', () => {
+    const s = score(ALIGN, [NAMELESS_RESUME]);
+    expect(ids(s)).not.toContain('context.file-mismatch');
+    expect(ids(s)).toContain('context.no-purpose');
+    expect(s.total).toBeGreaterThan(score(ALIGN, []).total + 15);
+  });
+
   it('flags a prompt that stops mid-sentence', () => {
     expect(ids(score('review my resume and', [RESUME]))).toContain('clarity.unfinished');
   });
