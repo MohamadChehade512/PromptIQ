@@ -428,3 +428,48 @@ describe('project toggle never lowers a score (user report, 2026-09-30)', () => 
     ).toContain('economy.filler');
   });
 });
+
+describe('coding prompts get coding advice (user report, 2026-10-02)', () => {
+  const CALC = 'Code me a calculator using Java, and make input taken within the console.';
+  const SCOPED =
+    'Code me a simple calculator in Java with console input. Support + - * / only, one Calculator.java file, standard library only. It’s for a beginner Java course, so keep it readable. Handle invalid input and divide-by-zero without crashing.';
+
+  it('asks for scope, not a word count', () => {
+    const r = score(CALC, 'claude', 'coding');
+    expect(ruleIds(r)).not.toContain('output.no-length');
+    expect(ruleIds(r)).toContain('output.no-code-scope');
+    for (const f of r.findings) expect(f.suggestion).not.toMatch(/words|bullet points|paragraph/);
+  });
+
+  it('accepts a scoped, specified coding prompt as excellent', () => {
+    const r = score(SCOPED, 'claude', 'coding');
+    expect(ruleIds(r)).not.toContain('output.no-code-scope');
+    expect(ruleIds(r)).not.toContain('output.no-format');
+    expect(r.total).toBeGreaterThanOrEqual(90);
+  });
+
+  it('reads "without crashing" as a requirement, not a bug report', () => {
+    const r = analyzePrompt({
+      platform: 'claude',
+      useCase: 'coding',
+      mode: 'simple',
+      prompt: SCOPED,
+      workspace: true,
+    }).score!;
+    expect(ruleIds(r)).not.toContain('agent.no-symptom');
+  });
+
+  it('never lists a suggestion worth less than half a point', () => {
+    for (const p of [CALC, SCOPED, 'Fix the login bug'])
+      for (const workspace of [false, true]) {
+        const r = analyzePrompt({
+          platform: 'claude',
+          useCase: 'coding',
+          mode: 'simple',
+          prompt: p,
+          workspace,
+        }).score!;
+        for (const f of r.findings) expect(f.points).toBeGreaterThanOrEqual(0.5);
+      }
+  });
+});

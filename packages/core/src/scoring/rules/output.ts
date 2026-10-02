@@ -16,6 +16,18 @@ const REVIEW_FOCUS_RE =
   /\b(?:for (?:a|an|the|my|our) |against|focus(?:ing)? on|in terms of|criteria|rubric|standards?|looking for|compared (?:to|with)|ats|applicant tracking|tone|clarity|grammar|spelling|punctuation|structure|impact|readability|concise(?:ness)?|accuracy|bugs?|performance|security|style|formatting|keywords?|consistency|flow|persuasive(?:ness)?|role|job|position|priorit|most important|biggest|highest[- ]impact|weakness(?:es)?|strengths?)\b/;
 const FALLBACK_RE =
   /\b(?:not found|n\/a|null|none|unknown|say so|if (?:it'?s |the answer is |the information is |they'?re )?(?:not|missing|absent|unclear|unsure)|if you (?:can'?t|cannot|don'?t know)|don'?t know|only (?:use|from|based on)|based only on)\b/;
+/**
+ * Coding: what bounds the work. Code isn't measured in words; its "length" is its scope:
+ * which features, which files, what's out, and whether to explain.
+ */
+const CODE_SCOPE_RE =
+  /\b(?:(?:single|one) (?:file|class|function|method|script|module|component|page|endpoint)|only (?:the|use|uses|using|support|supports|handle|need|include|change|modify|touch|return|output)|just (?:the )?(?:code|function|class|diff|changes?|snippet)|code only|no (?:gui|ui|explanations?|comments|tests|external|third[- ]party|frameworks?|libraries|dependencies)|without (?:a |any )?(?:gui|ui|explanations?|tests|libraries|frameworks?|dependencies)|minimal|bare[- ]bones|mvp|simple|basic|small|under \d+ lines|\d+ lines|standard library|stdlib|out of scope|don'?t (?:change|touch|add))\b/;
+/** Coding: how to hand the code back (beyond the general format words). */
+const CODE_FORMAT_RE =
+  /\b(?:(?:single|one) (?:file|class|script)|code only|just the code|no explanations?|runnable|full (?:code|program|file|source)|complete (?:code|program|file|class|source)|\w+\.(?:java|py|js|ts|tsx|jsx|go|rb|cs|cpp|c|rs|kt|swift|php|sh|sql))\b/;
+/** Coding: changing existing code (vs. building something new), for the right examples. */
+const CODE_CHANGE_RE =
+  /\b(?:fix|bug|debug|broken|error|refactor|change|update|modify|rename|move|remove|delete|migrate|upgrade|optimi[sz]e|speed up|clean up)\b/;
 const UNBOUNDED_RE =
   /\b(?:everything|all you know|as much as (?:possible|you can)|as detailed as possible|in as much detail|exhaustive(?:ly)?|leave nothing out|every single|all (?:the|of the) details)\b/;
 
@@ -25,23 +37,36 @@ export const outputRules: Rule[] = [
     dimension: 'output',
     title: 'No output format',
     sources: [S.anthropicFormat, S.vertexComponents, S.microsoftPromptEng, S.openaiBestPractices],
-    evaluate: ({ features, useCase }) =>
-      FORMAT_RE.test(features.instructionLower)
-        ? null
-        : {
-            // A review isn't a quick question, even under Q&A: its shape matters.
-            penalty:
-              useCase === 'brainstorming'
-                ? 0.2
-                : useCase === 'qa' && !isReviewTask(features)
-                  ? 0.35
-                  : 0.45,
-            message: "The prompt doesn't say what shape the answer should take.",
-            suggestion:
-              useCase === 'extraction'
-                ? 'Specify the exact structure, e.g. "Return JSON with fields name, email, company".'
-                : 'Name the format, e.g. "a Markdown table with columns X, Y, Z" or "3 short paragraphs".',
-          },
+    evaluate: ({ features, useCase }) => {
+      const lower = features.instructionLower;
+      const coding = useCase === 'coding';
+      if (FORMAT_RE.test(lower) || (coding && CODE_FORMAT_RE.test(lower))) return null;
+      if (coding) {
+        // Code is the obvious shape; what's unsaid is how to hand it back.
+        return {
+          penalty: 0.3,
+          message:
+            "The prompt doesn't say how to hand the code back: one file or several, the full program or just the changes, with or without an explanation.",
+          suggestion: CODE_CHANGE_RE.test(lower)
+            ? 'Say what to return, e.g. "only the changed function, as a diff" or "the fixed file in full, then one line on what changed".'
+            : 'Say what to return, e.g. "one runnable file in a single code block, then the command to run it".',
+        };
+      }
+      return {
+        // A review isn't a quick question, even under Q&A: its shape matters.
+        penalty:
+          useCase === 'brainstorming'
+            ? 0.2
+            : useCase === 'qa' && !isReviewTask(features)
+              ? 0.35
+              : 0.45,
+        message: "The prompt doesn't say what shape the answer should take.",
+        suggestion:
+          useCase === 'extraction'
+            ? 'Specify the exact structure, e.g. "Return JSON with fields name, email, company".'
+            : 'Name the format, e.g. "a Markdown table with columns X, Y, Z" or "3 short paragraphs".',
+      };
+    },
   },
   {
     id: 'output.no-length',
@@ -49,8 +74,9 @@ export const outputRules: Rule[] = [
     title: 'No length limit',
     sources: [S.openaiBestPractices, S.dairTips, S.anthropicPricing],
     evaluate: ({ features, useCase }) => {
-      // Extraction output length follows its input, so a limit isn't needed.
-      if (useCase === 'extraction') return null;
+      // Extraction output length follows its input, so a limit isn't needed; coding is bounded
+      // by scope instead (output.no-code-scope).
+      if (useCase === 'extraction' || useCase === 'coding') return null;
       const unbounded = UNBOUNDED_RE.test(features.instructionLower);
       if (
         !unbounded &&
@@ -70,12 +96,36 @@ export const outputRules: Rule[] = [
         };
       }
       return {
-        penalty:
-          useCase === 'coding' ? 0.15 : useCase === 'qa' && !isReviewTask(features) ? 0.3 : 0.4,
+        penalty: useCase === 'qa' && !isReviewTask(features) ? 0.3 : 0.4,
         message:
           'No length or scope limit. Output costs 5–6× more than input, so answers tend to run long.',
         suggestion:
           'Bound the answer, e.g. "in under 150 words", "5 bullet points", or "one paragraph".',
+      };
+    },
+  },
+  {
+    id: 'output.no-code-scope',
+    dimension: 'output',
+    title: 'Scope not defined',
+    sources: [S.anthropicClear, S.openaiBestPractices, S.anthropicPricing],
+    useCases: ['coding'],
+    evaluate: ({ features }) => {
+      const lower = features.instructionLower;
+      if (
+        CODE_SCOPE_RE.test(lower) ||
+        detectExplicitLength(lower) ||
+        LENGTH_WORDS_RE.test(lower) ||
+        CODE_FORMAT_RE.test(lower)
+      )
+        return null;
+      return {
+        penalty: UNBOUNDED_RE.test(lower) ? 0.5 : 0.2,
+        message:
+          "The prompt doesn't define what's in or out of scope, so the model decides how much code and explanation to write. Output is billed at 5–6× the input rate, so a defined scope keeps responses focused and lower cost.",
+        suggestion: CODE_CHANGE_RE.test(lower)
+          ? 'Say what\'s in and out, e.g. "only change the auth module; don\'t touch the tests or the public API".'
+          : 'Say what\'s in and out, e.g. "core features only, no GUI, standard library only, one file".',
       };
     },
   },
@@ -85,14 +135,16 @@ export const outputRules: Rule[] = [
     title: 'No success criteria',
     sources: [S.principled, S.vertexComponents, S.anthropicClear],
     useCases: ['coding', 'analysis', 'extraction'],
-    evaluate: ({ features }) =>
+    evaluate: ({ features, useCase }) =>
       CRITERIA_RE.test(features.instructionLower)
         ? null
         : {
             penalty: 0.3,
             message: 'No requirements or constraints say what a correct answer must satisfy.',
             suggestion:
-              'List the must-haves, e.g. "must handle empty input", "only use the standard library", "cite the source line".',
+              useCase === 'coding'
+                ? 'List the must-haves, e.g. "handle invalid input without crashing", "standard library only", "include 2 unit tests".'
+                : 'List the must-haves, e.g. "must handle empty input", "only use the standard library", "cite the source line".',
           },
   },
   {

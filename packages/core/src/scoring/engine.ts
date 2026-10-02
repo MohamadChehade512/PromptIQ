@@ -69,6 +69,7 @@ const FOLLOW_UP_SOFTENED = new Set([
   'context.coding-stack',
   'output.no-format',
   'output.no-length',
+  'output.no-code-scope',
   'output.no-criteria',
   'examples.missing',
 ]);
@@ -104,6 +105,7 @@ const WORKSPACE_SOFTENED = new Set([
   'clarity.too-short',
   'output.no-format',
   'output.no-length',
+  'output.no-code-scope',
 ]);
 const WORKSPACE_FACTOR = 0.5;
 
@@ -226,5 +228,12 @@ function scoreWith(ctx: RuleContext, rules: readonly Rule[], agentScale: number)
       Number(a.ruleId.startsWith('engine.')) - Number(b.ruleId.startsWith('engine.')) ||
       b.points - a.points,
   );
-  return { total, band: scoreBand(total), dimensions, findings };
+  // A suggestion worth less than half a point isn't worth showing (it would read as "+1").
+  // The score already includes it.
+  return {
+    total,
+    band: scoreBand(total),
+    dimensions,
+    findings: findings.filter((f) => f.points >= 0.5),
+  };
 }

@@ -74,7 +74,9 @@ export const contextRules: Rule[] = [
         penalty: useCase === 'qa' && !isProductionTask(features) ? 0.35 : 0.45,
         message: "The prompt doesn't say why you need this or what it's for.",
         suggestion:
-          'Add one sentence of context, e.g. "This is for a README aimed at new contributors, so…". Models generalize better when they know the goal.',
+          useCase === 'coding'
+            ? 'Add one sentence of context, e.g. "It\'s for a beginner Java course, so keep it readable" or "It runs in production on Java 21". Models make better trade-offs when they know the goal.'
+            : 'Add one sentence of context, e.g. "This is for a README aimed at new contributors, so…". Models generalize better when they know the goal.',
       };
     },
   },

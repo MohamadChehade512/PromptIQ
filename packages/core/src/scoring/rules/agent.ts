@@ -66,6 +66,8 @@ const IDENTIFIER_RE = /\b[a-z]+[A-Z][\w]*\b|\b[A-Z][a-z]+[A-Z][\w]*\b/;
 
 const BUG_RE =
   /\b(?:fix|bug|broken|failing|fails?|error|crash(?:es|ing)?|slow|hangs?|leak|wrong|not working|doesn'?t work|flaky|regression)\b/;
+const REQUIREMENT_NOT_BUG_RE =
+  /\b(?:without|no|never|not|doesn'?t|don'?t|won'?t|handles?|handled|handling|catch(?:es)?|graceful(?:ly)?|proper(?:ly)?)\s+(?:[\w'-]+\s+){0,4}?(?:crash(?:es|ing)?|errors?|fail(?:s|ing|ures?)?)\b|\berror[- ]handling\b/g;
 /** What's actually going wrong: numbers, quoted errors, when it happens, what was expected. */
 const SYMPTOM_RE =
   /\d|["“`]|\b(?:when|after|since|every time|whenever|instead of|expected|should|returns?|shows?|takes?|report(?:s|ed)?|throws?|logs?)\b/;
@@ -117,7 +119,9 @@ export const agentRules: Rule[] = [
     evaluate: (ctx) => {
       if (!applies(ctx)) return null;
       const lower = ctx.features.instructionLower;
-      if (!BUG_RE.test(lower) || SYMPTOM_RE.test(lower)) return null;
+      // "Handle errors", "without crashing" and "error handling" are requirements, not bugs.
+      const asBug = lower.replace(REQUIREMENT_NOT_BUG_RE, ' ');
+      if (!BUG_RE.test(asBug) || SYMPTOM_RE.test(lower)) return null;
       return {
         penalty: 0.45,
         message:
