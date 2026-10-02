@@ -44,38 +44,63 @@ function page(error) {
   const message = error
     ? '<p class="error" role="alert">That code didn’t work. Check it and try again.</p>'
     : '';
+  // Same look as the site (apps/web/src/styles.css): Inter from a fixed public path, warm
+  // paper, ink buttons, light and dark.
   const html =
     '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
     '<meta name="robots" content="noindex">' +
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg">' +
+    '<link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>' +
     '<title>Prompt Workshop · Access code</title><style>' +
-    ':root{--bg:#f7f5f0;--card:#fff;--text:#1b1a17;--muted:#77736a;--border:#e4e0d6;--strong:#cfcabd;--btn:#1b1a17;--btn-text:#f7f5f0;--ring:rgba(51,71,107,.25)}' +
-    '@media (prefers-color-scheme:dark){:root{--bg:#141412;--card:#1b1a18;--text:#f1eee7;--muted:#979284;--border:#2f2d29;--strong:#45423c;--btn:#f1eee7;--btn-text:#141412;--ring:rgba(169,184,216,.3)}}' +
-    '*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;' +
-    'background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}' +
-    'main{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px}' +
-    '.brand{font:1.5rem/1 "Iowan Old Style",Georgia,serif;color:var(--text);text-decoration:none}' +
-    '.badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;border:1px solid var(--strong);' +
-    'font:600 .6875rem/1.5 system-ui,sans-serif;letter-spacing:.04em;color:var(--muted);vertical-align:middle}' +
-    'h1{margin:24px 0 6px;font:400 2rem/1.1 "Iowan Old Style",Georgia,serif}' +
-    'p{margin:0 0 20px;color:var(--muted);font-size:.9375rem}label{display:block;font-weight:500;font-size:.875rem;margin-bottom:6px}' +
-    'input{width:100%;height:42px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:transparent;' +
-    'color:var(--text);font:inherit;letter-spacing:.06em;text-transform:uppercase}' +
+    "@font-face{font-family:'Inter Variable';font-style:normal;font-display:swap;font-weight:100 900;" +
+    "src:url(/fonts/inter-latin.woff2) format('woff2-variations')}" +
+    ':root{--bg:#f7f5f0;--card:#fff;--soft:#f2efe8;--text:#1b1a17;--text2:#4a4740;--muted:#77736a;--border:#e4e0d6;' +
+    '--strong:#cfcabd;--btn:#1b1a17;--btn-text:#f7f5f0;--ring:rgba(51,71,107,.22);--bad:#ab4436;--good:#3f7a52}' +
+    '@media (prefers-color-scheme:dark){:root{--bg:#141412;--card:#1b1a18;--soft:#232220;--text:#f1eee7;--text2:#cdc8bc;' +
+    '--muted:#979284;--border:#2f2d29;--strong:#45423c;--btn:#f1eee7;--btn-text:#141412;--ring:rgba(169,184,216,.3);' +
+    '--bad:#dd8576;--good:#7fb48d}}' +
+    '*{box-sizing:border-box}html,body{height:100%}' +
+    'body{margin:0;display:flex;flex-direction:column;background:var(--bg);color:var(--text);' +
+    "font:16px/1.55 'Inter Variable',system-ui,-apple-system,'Segoe UI',sans-serif;font-optical-sizing:auto;" +
+    '-webkit-font-smoothing:antialiased}' +
+    'header{display:flex;align-items:center;gap:10px;min-height:60px;padding:10px clamp(16px,3.2vw,48px);border-bottom:1px solid var(--border)}' +
+    '.brand{font-size:1.1875rem;font-weight:700;letter-spacing:-.03em;color:var(--text);text-decoration:none}' +
+    '.badge{display:inline-block;padding:1px 7px;border-radius:999px;border:1px solid var(--strong);font-size:.6875rem;' +
+    'font-weight:600;letter-spacing:.04em;line-height:1.5;color:var(--text2)}' +
+    'main{flex:1;display:grid;place-items:center;padding:32px 16px}' +
+    '.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:32px;' +
+    'box-shadow:0 18px 48px -18px rgba(27,26,23,.28);animation:rise .6s cubic-bezier(.2,.8,.2,1) both}' +
+    '@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}' +
+    '.eyebrow{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:.75rem;font-weight:600;letter-spacing:.08em;' +
+    'text-transform:uppercase;color:var(--muted)}.dot{width:6px;height:6px;border-radius:50%;background:var(--good)}' +
+    'h1{margin:0 0 8px;font-size:2rem;font-weight:650;letter-spacing:-.035em;line-height:1.05}' +
+    'p{margin:0 0 22px;color:var(--text2);font-size:.9375rem}' +
+    'label{display:block;font-weight:500;font-size:.8125rem;color:var(--text2);margin-bottom:6px}' +
+    'input{width:100%;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:var(--card);' +
+    'color:var(--text);font:inherit;font-variant-numeric:tabular-nums;letter-spacing:.08em;text-transform:uppercase}' +
+    'input::placeholder{color:var(--muted);letter-spacing:.08em}input:hover{border-color:var(--strong)}' +
     'input:focus{outline:none;border-color:var(--text);box-shadow:0 0 0 3px var(--ring)}' +
-    'button{margin-top:14px;width:100%;height:42px;border:0;border-radius:9px;background:var(--btn);color:var(--btn-text);' +
-    'font:inherit;font-weight:600;cursor:pointer}button:hover{opacity:.88}' +
-    '.error{color:#ab4436;margin:12px 0 0}.back{display:inline-block;margin-top:20px;font-size:.875rem;color:var(--muted)}' +
-    '</style></head><body><main>' +
-    '<a class="brand" href="/">Prompt IQ</a><span class="badge">BETA</span>' +
+    'button{margin-top:14px;width:100%;height:44px;border:0;border-radius:9px;background:var(--btn);color:var(--btn-text);' +
+    'font:inherit;font-weight:600;cursor:pointer;transition:opacity .15s}button:hover{opacity:.88}' +
+    'button:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring)}' +
+    '.error{margin:12px 0 0;color:var(--bad);font-size:.875rem}' +
+    '.back{display:inline-block;margin-top:22px;font-size:.875rem;color:var(--muted);text-decoration:none}' +
+    '.back:hover{color:var(--text)}' +
+    '@media (prefers-reduced-motion:reduce){.card{animation:none}}' +
+    '</style></head><body>' +
+    '<header><a class="brand" href="/">Prompt IQ</a><span class="badge">BETA</span></header>' +
+    '<main><div class="card">' +
+    '<p class="eyebrow"><span class="dot"></span>Private beta</p>' +
     '<h1>Prompt Workshop</h1>' +
     '<p>The Workshop is in a private beta. Enter the access code you were given.</p>' +
     '<form method="get" action="/__access"><label for="code">Access code</label>' +
-    '<input id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" required autofocus>' +
+    '<input id="code" name="code" placeholder="PIQ-XXXX-XXXX-XXXX" autocomplete="off" ' +
+    'autocapitalize="characters" spellcheck="false" required autofocus>' +
     '<button type="submit">Continue</button></form>' +
     message +
     '<a class="back" href="/">← Back to Prompt IQ</a>' +
-    '</main></body></html>';
+    '</div></main></body></html>';
   return {
     statusCode: 401,
     statusDescription: 'Unauthorized',
