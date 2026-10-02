@@ -14,16 +14,16 @@ afterEach(() => {
 describe('Site', () => {
   it('opens on the home page with the three parts of Prompt IQ', () => {
     at('/');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/Better prompts/);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/Better answers/);
     expect(screen.getByRole('heading', { name: 'Docs' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Prompt Workshop' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Prompt Studio' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /^Prompt Studio/ })).toBeTruthy();
     expect(screen.getAllByText('Under construction').length).toBeGreaterThan(0);
   });
 
   it('never links to Prompt Studio while it is under construction', () => {
     at('/');
-    const studio = screen.getByRole('heading', { name: 'Prompt Studio' }).closest('article')!;
+    const studio = screen.getByRole('heading', { name: /^Prompt Studio/ }).closest('article')!;
     expect(within(studio).queryByRole('link')).toBeNull();
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).queryByRole('link', { name: /Studio/ })).toBeNull();

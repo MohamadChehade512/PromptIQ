@@ -1,4 +1,5 @@
 import type { Finding, ScoreBand, ScoreResult } from '@promptgenius/core';
+import { useCountUp } from '../lib/motion';
 import { BAND_TONES } from '../lib/scoreTone';
 import { SourceLinks } from './SourceLinks';
 
@@ -12,6 +13,8 @@ const BAND_LABELS: Record<ScoreBand, string> = {
 function Dial({ score, band }: { score: number; band: ScoreBand }) {
   const r = 52;
   const c = 2 * Math.PI * r;
+  // The arc and number glide to each new score.
+  const shown = useCountUp(score, 600, 0);
   return (
     <div
       className={`dial tone-${BAND_TONES[band]}`}
@@ -25,12 +28,12 @@ function Dial({ score, band }: { score: number; band: ScoreBand }) {
           cx="60"
           cy="60"
           r={r}
-          strokeDasharray={`${(score / 100) * c} ${c}`}
+          strokeDasharray={`${(shown / 100) * c} ${c}`}
           transform="rotate(-90 60 60)"
         />
       </svg>
       <div className="dial-text" aria-hidden="true">
-        <span className="dial-score">{score}</span>
+        <span className="dial-score">{Math.round(shown)}</span>
         <span className="dial-max">/100</span>
       </div>
     </div>
@@ -42,7 +45,8 @@ function Suggestion({ f }: { f: Finding }) {
     <li className="suggestion">
       <span className="points">+{Math.max(1, Math.round(f.points))}</span>
       <div>
-        <strong>{f.title}.</strong> {f.message}
+        <strong>{f.title}.</strong>{' '}
+        {f.dimension === 'economy' && <span className="saves-tag">Saves tokens</span>} {f.message}
         <p className="fix">{f.suggestion}</p>
         {f.evidence && f.evidence.length > 0 && (
           <p className="evidence">Found: {f.evidence.map((e) => `“${e}”`).join(', ')}</p>

@@ -30,7 +30,8 @@ describe('App (Simple mode)', () => {
     type(WEAK);
     expect(await screen.findByRole('img', { name: /Prompt score \d+ out of 100/ })).toBeTruthy();
     expect(screen.getByText('Top suggestions')).toBeTruthy();
-    expect(screen.getByText(/typical messages/)).toBeTruthy();
+    expect(screen.getAllByText(/typical messages/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Cost of a retry')).toBeTruthy();
     expect(screen.queryByText('Cost per call')).toBeNull();
   });
 
@@ -173,10 +174,10 @@ describe('Conversation so far', () => {
     installFakeApi();
     render(<App />);
     type('Summarize the key decisions from our discussion in 5 bullet points for the team.');
-    const before = screen.getByText(/typical messages/).parentElement!.textContent;
+    const before = screen.getAllByText(/typical messages/)[0]!.parentElement!.textContent;
     fireEvent.change(screen.getByLabelText('Conversation so far'), { target: { value: 'long' } });
     expect(await screen.findByText('Earlier conversation (resent)')).toBeTruthy();
-    expect(screen.getByText(/typical messages/).parentElement!.textContent).not.toBe(before);
+    expect(screen.getAllByText(/typical messages/)[0]!.parentElement!.textContent).not.toBe(before);
     expect(screen.getByText('Long conversation.')).toBeTruthy();
   });
 

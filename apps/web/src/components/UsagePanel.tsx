@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '@promptgenius/core';
+import { callCost, type AnalysisResult } from '@promptgenius/core';
 import type { ExactStatus } from '../hooks/useExactTokenCount';
 import { formatPct, formatRange, formatTokens, formatUsd } from '../lib/format';
 import { SessionChart } from './SessionChart';
@@ -35,6 +35,50 @@ function ContextBar({ a }: { a: AnalysisResult }) {
         {windowVerified ? '' : ' (window size unverified)'}.
         {usedPct.high > 80 &&
           ' Close to full: long chats will start dropping or summarizing early turns.'}
+      </p>
+    </div>
+  );
+}
+
+/** A typical "that's not what I meant…" follow-up. */
+const FOLLOW_UP_TOKENS = 25;
+
+/**
+ * What it costs if this prompt misses and you rephrase: the follow-up resends this message and
+ * its answer, then gets a new answer (and thinking). Worked out from this message's own numbers.
+ */
+function RetryCost({ a, advanced }: { a: AnalysisResult; advanced: boolean }) {
+  const out = a.output;
+  const thinking = a.reasoning ? out.thinking.mid : 0;
+  const thisCall = a.inputTokens + out.visible.mid + thinking;
+  const retryInput = a.inputTokens + out.visible.mid + FOLLOW_UP_TOKENS;
+  const retryTokens = retryInput + out.visible.mid + thinking;
+  const retryUsd = callCost(a.model, {
+    inputTokens: retryInput,
+    outputTokens: out.visible.mid,
+    thinkingTokens: thinking,
+  }).total;
+  const retryTypical = thisCall > 0 ? (a.typicalMessages * retryTokens) / thisCall : 0;
+  return (
+    <div className="retry-cost">
+      <div className="retry-cost-head">
+        <span className="retry-cost-label">Cost of a retry</span>
+        <span className="retry-cost-value">
+          ≈ {formatTokens(retryTokens)} <span className="unit">tokens</span>
+          {advanced ? (
+            <span className="unit"> · {formatUsd(retryUsd)}</span>
+          ) : (
+            <span className="unit">
+              {' '}
+              · ≈ {retryTypical < 10 ? retryTypical.toFixed(1) : Math.round(retryTypical)} typical
+              messages
+            </span>
+          )}
+        </span>
+      </div>
+      <p className="hint">
+        If the answer misses and you rephrase, the follow-up resends this message and its answer.
+        Fixing the suggestions first is the cheapest way to avoid it.
       </p>
     </div>
   );
@@ -127,6 +171,7 @@ export function UsagePanel(props: {
         </div>
       </dl>
       <p className="hint">{out.detail}</p>
+      {a.promptTokens.tokens > 0 && <RetryCost a={a} advanced={advanced} />}
       {a.workspace && (
         <p className="hint">
           Coding tools and Projects also read your files as they work, so real usage will be higher

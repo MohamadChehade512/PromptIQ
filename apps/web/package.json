@@ -1,6 +1,6 @@
 {
   "name": "@promptgenius/web",
-  "version": "1.2.0-beta",
+  "version": "1.3.0-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
-    "@fontsource/instrument-serif": "^5.3.0",
     "@promptgenius/api-contract": "workspace:*",
     "@promptgenius/core": "workspace:*",
     "mammoth": "^1.12.3",

@@ -2,6 +2,7 @@ import { useDocumentTitle } from '../lib/router';
 
 const SECTIONS = [
   { id: 'overview', title: 'Overview' },
+  { id: 'efficiency', title: 'Why efficiency matters' },
   { id: 'workshop', title: 'The Workshop' },
   { id: 'scoring', title: 'How scoring works' },
   { id: 'suggestions', title: 'Suggestions and sources' },
@@ -66,6 +67,21 @@ export function DocsPage() {
                 <strong>Prompt Studio</strong>: speak instead of typing (under construction).
               </li>
             </ul>
+          </section>
+
+          <section id="efficiency">
+            <h2>Why efficiency matters</h2>
+            <p>
+              Most of what a message costs isn’t the prompt. It’s the answer and the hidden thinking
+              the model does before answering, and both grow when the request is vague. A clear
+              prompt can be longer than a vague one and still cost far less, because the answer is
+              focused.
+            </p>
+            <p>
+              The biggest cost is the retry. When an answer misses, you rephrase, and every
+              follow-up resends the whole conversation so far. The Workshop shows the cost of a
+              retry for your prompt, so you can see what getting it right the first time saves.
+            </p>
           </section>
 
           <section id="workshop">

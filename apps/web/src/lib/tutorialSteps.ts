@@ -48,7 +48,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'usage',
     title: 'Tokens, context and cost',
-    body: 'See how many tokens the prompt and files use, how long the answer is likely to be, and how much of the context window it fills. In Advanced mode you’ll also see the cost per call.',
+    body: 'See how many tokens the prompt and files use, how long the answer is likely to be, how much of the context window it fills, and what a retry would cost if the answer misses. In Advanced mode you’ll also see the cost per call.',
   },
   {
     target: 'rewrite',
