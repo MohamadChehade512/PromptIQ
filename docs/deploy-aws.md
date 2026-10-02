@@ -205,6 +205,27 @@ credentials, so no AWS keys are stored in GitHub. All of this is free.
    - `PG_DISTRIBUTION_ID`: `E2FCHX4QWQP1ZA`
 4. Push to `main`, or **Actions → Deploy web → Run workflow**.
 
+## Private beta: access codes
+
+The live site is behind an access-code gate: a CloudFront Function
+(`infra/access-gate/function.js`) checks every request, so nothing of the site is served without a
+valid code. Each person gets their own code; removing it locks them out. Free on the CloudFront
+Free plan. (The Free plan doesn't allow a KeyValueStore on a function, so the codes are written
+into the deployed function itself. They live only in AWS, never in git.)
+
+```sh
+export AWS_PROFILE=promptiq PG_DISTRIBUTION_ID=E2FCHX4QWQP1ZA
+./scripts/access-gate.sh add "Jane Doe"     # prints her code and an invite link
+./scripts/access-gate.sh list               # every code and who it's for
+./scripts/access-gate.sh remove PIQ-XXXX-XXXX-XXXX
+./scripts/access-gate.sh off                # open the site to everyone (codes kept)
+./scripts/access-gate.sh on                 # require codes again
+./scripts/access-gate.sh setup              # first-time setup, or after editing function.js
+```
+
+People open the invite link (or the site, then type the code) once; a secure cookie keeps them in
+for 30 days. `/__logout` signs out. Changes take a minute or two to reach every location.
+
 ## 9. Updating and rolling back
 
 - **Update:** push to `main` (or run `pnpm deploy:web` from your Mac).
