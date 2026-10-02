@@ -43,13 +43,17 @@ spend limit in the Anthropic Console as a backstop.
 | `pnpm format`                                | Formats the repo with Prettier                                    |
 | `pnpm --filter @promptgenius/core calibrate` | Prints the scoring calibration table (PLAN.md §2.7)               |
 
-## Brand
+## Brand and site
 
-The original logo artwork is [`docs/brand/prompt-iq-logo.png`](docs/brand/prompt-iq-logo.png).
-Vector versions traced from it live in `apps/web/public/`: `logo-mark.svg` (icon, also the
-favicon), `logo.svg` (horizontal) and `logo-stacked.svg` (icon above the name). In the app, the
-mark is `apps/web/src/components/Logo.tsx`. Brand colours: cyan `#01CCFF` → blue `#0072FA` →
-violet `#AC35FE`; wordmark navy `#0B1A2E`.
+The brand is the "Prompt IQ" wordmark set in Instrument Serif; there is no logo mark. The
+favicon is "IQ" on an ink square (`apps/web/public/favicon.svg`). The design system (warm paper
+backgrounds, ink text, one muted accent, Inter for text) lives in `apps/web/src/styles.css`.
+The earlier gradient logo is kept for reference in `docs/brand/prompt-iq-logo.png`.
+
+The site has a public home page (`/`) and docs (`/docs`), the access-code-gated Prompt
+Workshop (`/workshop`), and Prompt Studio (`/studio`, under construction). Pages live in
+`apps/web/src/site/`. The Workshop is a separate lazily loaded bundle under `assets/w/`, which
+the edge function (`infra/access-gate/function.js`) only serves to people with a code.
 
 ## Updating prices and models
 

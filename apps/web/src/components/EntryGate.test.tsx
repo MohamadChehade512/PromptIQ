@@ -30,7 +30,7 @@ function fill(name: string, email: string, agree: boolean) {
 describe('Entry gate', () => {
   it('shows a loading screen, then the terms', async () => {
     renderGate();
-    expect(screen.getByRole('status').textContent).toContain('Loading Prompt IQ');
+    expect(screen.getByRole('status').textContent).toContain('Loading Prompt Workshop');
     expect(await screen.findByRole('heading', { name: 'Before you start' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Terms of use' })).toBeTruthy();
     expect(screen.queryByText(/Welcome,/)).toBeNull();
@@ -93,12 +93,12 @@ describe('Tutorial', () => {
   it('starts after agreeing and steps through each part with Next', () => {
     installFakeApi();
     render(<App agreement={agreement} />);
-    const dialog = screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' });
+    const dialog = screen.getByRole('dialog', { name: 'Welcome to the Prompt Workshop' });
     expect(dialog.textContent).toContain('Step 1 of');
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByRole('dialog', { name: 'Simple or Advanced' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Welcome to the Prompt Workshop' })).toBeTruthy();
   });
 
   it('every step points at a part that exists on the page', () => {
@@ -124,7 +124,7 @@ describe('Tutorial', () => {
     ]) {
       expect(container.querySelector(`[data-tour="${target}"]`)).toBeTruthy();
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Start using Prompt IQ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start using the Workshop' }));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -138,7 +138,7 @@ describe('Tutorial', () => {
     render(<App agreement={agreement} />);
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Show tutorial' }));
-    expect(screen.getByRole('dialog', { name: 'Welcome to Prompt IQ' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Welcome to the Prompt Workshop' })).toBeTruthy();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();
   });

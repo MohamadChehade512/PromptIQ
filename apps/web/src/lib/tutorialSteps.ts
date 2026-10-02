@@ -7,8 +7,8 @@ export interface TutorialStep {
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Welcome to Prompt IQ',
-    body: 'Prompt IQ helps you write better prompts for Claude, ChatGPT and Gemini. As you type, it estimates tokens, context and cost, and scores your prompt with suggestions to improve it. This quick tour shows what each part does.',
+    title: 'Welcome to the Prompt Workshop',
+    body: 'The Workshop helps you write better prompts for Claude, ChatGPT and Gemini. As you type, it estimates tokens, context and cost, and scores your prompt with suggestions to improve it. This quick tour shows what each part does.',
   },
   {
     target: 'mode',

@@ -204,7 +204,7 @@ export function Tutorial(props: { onClose: () => void; steps?: TutorialStep[] })
             className="button primary"
             onClick={() => (last ? props.onClose() : setIndex(index + 1))}
           >
-            {last ? 'Start using Prompt IQ' : 'Next'}
+            {last ? 'Start using the Workshop' : 'Next'}
           </button>
         </div>
       </div>

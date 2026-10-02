@@ -33,7 +33,7 @@ aws s3 sync "$DIST/assets" "s3://$PG_BUCKET/assets" --delete --exclude "*.mjs"
 
 echo "→ Telling CloudFront to fetch the new index.html"
 aws cloudfront create-invalidation --distribution-id "$PG_DISTRIBUTION_ID" \
-  --paths "/index.html" "/favicon.svg" "/logo.svg" "/logo-mark.svg" \
+  --paths "/index.html" "/favicon.svg" \
   --query 'Invalidation.Id' --output text
 
 echo "✓ Deployed. It can take a minute or two to show up everywhere."

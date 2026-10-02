@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { installFakeApi } from './test/fakeApi';
 
@@ -10,11 +10,17 @@ function type(text: string) {
 }
 
 describe('App (Simple mode)', () => {
-  it('shows the tagline and the app version', () => {
+  it('copies the prompt to the clipboard', async () => {
     installFakeApi();
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     render(<App />);
-    expect(screen.getByText(/Build better prompts for Claude/)).toBeTruthy();
-    expect(screen.getByText(`Version ${__APP_VERSION__}`)).toBeTruthy();
+    const copy = screen.getByRole<HTMLButtonElement>('button', { name: 'Copy' });
+    expect(copy.disabled).toBe(true);
+    type(WEAK);
+    fireEvent.click(copy);
+    expect(writeText).toHaveBeenCalledWith(WEAK);
+    expect(await screen.findByRole('button', { name: 'Copied' })).toBeTruthy();
   });
 
   it('shows score, tokens and relative usage as you type', async () => {
@@ -247,27 +253,6 @@ describe('Attached files', () => {
     expect(await screen.findByText("This doesn't look like a text file.")).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Remove setup.exe' }));
     expect(screen.queryByText(/Unsupported file type/)).toBeNull();
-  });
-});
-
-describe('Theme toggle', () => {
-  it('switches light/dark, applies it to the page and remembers it', () => {
-    installFakeApi();
-    const { unmount } = render(<App />);
-    const toggle = screen.getByRole('switch', { name: 'Dark mode' });
-    // jsdom has no matchMedia, so the system default is light.
-    expect(toggle.getAttribute('aria-checked')).toBe('false');
-    fireEvent.click(toggle);
-    expect(toggle.getAttribute('aria-checked')).toBe('true');
-    expect(document.documentElement.dataset.theme).toBe('dark');
-    unmount();
-
-    render(<App />);
-    const again = screen.getByRole('switch', { name: 'Dark mode' });
-    expect(again.getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(again);
-    expect(document.documentElement.dataset.theme).toBe('light');
-    delete document.documentElement.dataset.theme;
   });
 });
 

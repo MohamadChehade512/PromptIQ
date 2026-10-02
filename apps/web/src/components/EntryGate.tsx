@@ -9,19 +9,15 @@ import {
   validateName,
   type Agreement,
 } from '../lib/agreement';
-import { Wordmark } from './Logo';
 import { TermsText } from './TermsText';
 
 function LoadingScreen() {
   return (
     <div className="entry entry-loading" role="status" aria-live="polite">
-      <div className="entry-brand">
-        <Wordmark size={44} />
-      </div>
       <div className="entry-progress" aria-hidden="true">
         <span />
       </div>
-      <span className="entry-status">Loading Prompt IQ…</span>
+      <span className="entry-status">Loading Prompt Workshop…</span>
     </div>
   );
 }
@@ -49,9 +45,7 @@ function TermsScreen({ onAgree }: { onAgree: (a: Agreement) => void }) {
   return (
     <main className="entry entry-terms" aria-labelledby={titleId}>
       <div className="entry-card card">
-        <div className="entry-brand">
-          <Wordmark size={36} />
-        </div>
+        <p className="eyebrow">Prompt Workshop</p>
         <h1 id={titleId}>Before you start</h1>
         <p className="beta-banner" role="note">
           <span className="beta-badge">Beta</span>
@@ -127,15 +121,15 @@ function TermsScreen({ onAgree }: { onAgree: (a: Agreement) => void }) {
 }
 
 /**
- * Entry flow: a short loading screen, then the terms (name, email, agree) unless this
- * browser already agreed to the current version, then the app.
+ * The Workshop's entry flow: a short loading screen, then the terms (name, email, agree)
+ * unless this browser already agreed to the current version, then the Workshop.
  */
 export function EntryGate(props: {
   children: (agreement: Agreement, withdraw: () => void) => ReactNode;
   /** How long the loading screen shows at least; 0 in tests. */
   minLoadingMs?: number;
 }) {
-  const minLoadingMs = props.minLoadingMs ?? 900;
+  const minLoadingMs = props.minLoadingMs ?? 500;
   const [loaded, setLoaded] = useState(false);
   const [agreement, setAgreement] = useState<Agreement | null>(() => readAgreement());
 

@@ -16,14 +16,12 @@ import {
 import { useDeferredValue, useMemo, useState } from 'react';
 import { AdvancedInputs } from './components/AdvancedInputs';
 import { AttachmentsInput } from './components/AttachmentsInput';
-import { Wordmark } from './components/Logo';
 import { Controls } from './components/Controls';
 import { ConversationInput } from './components/ConversationInput';
 import { WorkspaceToggle } from './components/WorkspaceToggle';
 import { PromptEditor } from './components/PromptEditor';
 import { RewritePanel } from './components/RewritePanel';
 import { ScorePanel } from './components/ScorePanel';
-import { ThemeToggle } from './components/ThemeToggle';
 import { Tutorial } from './components/Tutorial';
 import { Segmented } from './components/Segmented';
 import { UsagePanel } from './components/UsagePanel';
@@ -150,24 +148,19 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
 
   return (
     <div className="shell" data-tone={tone}>
-      <header className="top">
+      <div className="page-head">
         <div>
-          <h1>
-            <Wordmark size={34} />
-          </h1>
+          <h1 className="display">Prompt Workshop</h1>
           <p className="tagline">Build better prompts for Claude, ChatGPT and Gemini.</p>
         </div>
-        <div className="top-controls">
-          <div data-tour="mode">
-            <Segmented label="Detail level" options={MODES} value={mode} onChange={setMode} />
-          </div>
-          <ThemeToggle />
+        <div data-tour="mode">
+          <Segmented label="Detail level" options={MODES} value={mode} onChange={setMode} />
         </div>
-      </header>
+      </div>
 
       <p className="beta-banner" role="note">
         <span className="beta-badge">Beta</span>
-        Prompt IQ is still in development. Scores, estimates and features may change, and some
+        The Workshop is still in development. Scores, estimates and features may change, and some
         things may not work as expected.
       </p>
 
@@ -246,11 +239,9 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
 
       <footer className="bottom">
         <span className={`status status-${health.state}`}>API: {health.state}</span>
-        <span>Your prompts are never stored or logged. Estimates are guidance, not bills.</span>
         <button type="button" className="link-button" onClick={() => setTouring(true)}>
           Show tutorial
         </button>
-        <span className="version">Version {__APP_VERSION__}</span>
         {props.agreement && (
           <span>
             Agreed to the terms as {props.agreement.name}

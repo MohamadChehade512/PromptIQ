@@ -207,9 +207,11 @@ credentials, so no AWS keys are stored in GitHub. All of this is free.
 
 ## Private beta: access codes
 
-The live site is behind an access-code gate: a CloudFront Function
-(`infra/access-gate/function.js`) checks every request, so nothing of the site is served without a
-valid code. Each person gets their own code; removing it locks them out. Free on the CloudFront
+The Prompt Workshop is behind an access-code gate: a CloudFront Function
+(`infra/access-gate/function.js`) checks every request for `/workshop` and for the Workshop's
+code bundle (`/assets/w/`, which holds the scoring engine), so none of it is served without a
+valid code. The home page (`/`) and docs (`/docs`) are public. The same function serves the app
+for page addresses (`/docs`, `/workshop`, `/studio`), so links to them work directly. Each person gets their own code; removing it locks them out. Free on the CloudFront
 Free plan. (The Free plan doesn't allow a KeyValueStore on a function, so the codes are written
 into the deployed function itself. They live only in AWS, never in git.)
 
@@ -223,7 +225,7 @@ export AWS_PROFILE=promptiq PG_DISTRIBUTION_ID=E2FCHX4QWQP1ZA
 ./scripts/access-gate.sh setup              # first-time setup, or after editing function.js
 ```
 
-People open the invite link (or the site, then type the code) once; a secure cookie keeps them in
+People open the invite link (or the Workshop, then type the code) once; a secure cookie keeps them in
 for 30 days. `/__logout` signs out. Changes take a minute or two to reach every location.
 
 ## 9. Updating and rolling back

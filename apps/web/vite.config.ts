@@ -37,8 +37,28 @@ const cspMeta: Plugin = {
   ],
 };
 
+/**
+ * Everything loaded lazily (the Workshop and what only it uses: the scoring engine, tokenizer,
+ * file readers) is emitted under assets/w/, which the access-code gate protects
+ * (infra/access-gate/function.js). The public pages (home, docs) must never depend on it, so
+ * the build fails if the entry chunk statically imports anything from there.
+ */
+const GATED_DIR = 'assets/w/';
+const gatedChunksStayGated: Plugin = {
+  name: 'gated-chunks-stay-gated',
+  apply: 'build',
+  generateBundle(_options, bundle) {
+    for (const chunk of Object.values(bundle)) {
+      if (chunk.type !== 'chunk' || !chunk.isEntry) continue;
+      const leaked = chunk.imports.filter((f) => f.startsWith(GATED_DIR));
+      if (leaked.length)
+        this.error(`Public entry ${chunk.fileName} statically imports gated ${leaked.join(', ')}`);
+    }
+  },
+};
+
 export default defineConfig({
-  plugins: [react(), cspMeta],
+  plugins: [react(), cspMeta, gatedChunksStayGated],
   // Shown in the footer; bump "version" in apps/web/package.json for each release.
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: {
@@ -55,6 +75,15 @@ export default defineConfig({
     // The o200k tokenizer (~2 MB) is its own lazily-loaded chunk, fetched only when the
     // ChatGPT platform is used; the app entry stays small.
     chunkSizeWarningLimit: 2_100,
+    rollupOptions: {
+      output: {
+        // The bundler's own runtime helper is shared with the public entry, so it stays public.
+        chunkFileNames: (chunk) =>
+          chunk.name === 'rolldown-runtime'
+            ? 'assets/[name]-[hash].js'
+            : `${GATED_DIR}[name]-[hash].js`,
+      },
+    },
   },
   test: {
     environment: 'jsdom',
