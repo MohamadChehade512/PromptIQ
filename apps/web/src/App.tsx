@@ -165,6 +165,12 @@ export function App(props: { agreement?: Agreement; onWithdraw?: () => void } = 
         </div>
       </header>
 
+      <p className="beta-banner" role="note">
+        <span className="beta-badge">Beta</span>
+        Prompt IQ is still in development. Scores, estimates and features may change, and some
+        things may not work as expected.
+      </p>
+
       <main className="layout">
         <div className="col-main">
           <section className="card" aria-label="Target" data-tour="target">

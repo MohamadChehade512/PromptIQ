@@ -53,6 +53,10 @@ function TermsScreen({ onAgree }: { onAgree: (a: Agreement) => void }) {
           <Wordmark size={36} />
         </div>
         <h1 id={titleId}>Before you start</h1>
+        <p className="beta-banner" role="note">
+          <span className="beta-badge">Beta</span>
+          Prompt IQ is a beta in development: scores, estimates and features may change.
+        </p>
         <p className="tagline">
           Please read the terms of use, then enter your name and email and agree to continue.
         </p>

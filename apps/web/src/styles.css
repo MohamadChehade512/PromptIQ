@@ -1716,3 +1716,50 @@ select {
   font-size: 0.9375rem;
   color: var(--text);
 }
+
+/* ---------- Beta ---------- */
+.beta-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  vertical-align: middle;
+  -webkit-text-fill-color: currentColor;
+}
+.wordmark .beta-badge {
+  margin-left: -2px;
+  align-self: center;
+}
+.beta-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+  color: var(--text-2);
+  font-size: 0.8125rem;
+}
+.beta-banner .beta-badge {
+  margin-left: 0;
+  flex: none;
+}
+.entry-card .beta-banner {
+  margin: 4px 0 12px;
+}
+@media (forced-colors: active) {
+  .beta-badge,
+  .beta-banner {
+    border: 1px solid CanvasText;
+  }
+}

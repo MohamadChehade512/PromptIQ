@@ -102,7 +102,7 @@ export function Logo({ size = 32, title }: { size?: number; title?: string }) {
   );
 }
 
-/** Mark + "Prompt IQ" wordmark, with "IQ" in the brand gradient. */
+/** Mark + "Prompt IQ" wordmark, with "IQ" in the brand gradient, and a Beta badge. */
 export function Wordmark({ size = 32 }: { size?: number }) {
   return (
     <span className="wordmark">
@@ -110,6 +110,7 @@ export function Wordmark({ size = 32 }: { size?: number }) {
       <span className="wordmark-text">
         Prompt <span className="wordmark-accent">IQ</span>
       </span>
+      <span className="beta-badge">Beta</span>
     </span>
   );
 }
