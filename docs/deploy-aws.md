@@ -163,10 +163,12 @@ credentials, so no AWS keys are stored in GitHub. All of this is free.
    - GitHub organization: `MohamadChehade512`, repository: `PromptIQ`, branch: `main`
    - Skip the permissions page, name it `promptiq-github-deploy`, create it.
    - Open the role → **Trust relationships → Edit trust policy**, and replace the `sub`
-     condition with `"token.actions.githubusercontent.com:sub": "repo:MohamadChehade512/PromptIQ:environment:production"`
-     (under `StringEquals`). The workflow deploys through the `production` environment, so
-     GitHub identifies as that environment, not the branch; the console's branch condition
-     fails with "Not authorized to perform sts:AssumeRoleWithWebIdentity".
+     condition (under `StringEquals`) with:
+     `"token.actions.githubusercontent.com:sub": "repo:MohamadChehade512@147628826/PromptIQ@1384425873:environment:production"`.
+     GitHub identifies as the `production` environment (not the branch), and includes the
+     account and repo IDs, which also keeps working if the repo is renamed. If a deploy fails
+     with "Not authorized to perform sts:AssumeRoleWithWebIdentity", CloudTrail → Event history →
+     `AssumeRoleWithWebIdentity` shows the exact value GitHub sent (after `sts.amazonaws.com:`).
    - Open the role → **Add permissions → Create inline policy → JSON**, paste (with your bucket,
      account ID and distribution ID), name it `deploy-web`:
 
