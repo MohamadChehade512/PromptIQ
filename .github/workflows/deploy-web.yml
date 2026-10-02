@@ -1,0 +1,41 @@
+name: Deploy web
+
+# Publishes the site to S3 + CloudFront on every push to main (docs/deploy-aws.md).
+# AWS access is short-lived via GitHub's OIDC: no AWS keys are stored in GitHub.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+# One deploy at a time; a newer push waits rather than racing an upload in progress.
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - run: ./scripts/deploy-web.sh
+        env:
+          PG_BUCKET: ${{ vars.PG_BUCKET }}
+          PG_DISTRIBUTION_ID: ${{ vars.PG_DISTRIBUTION_ID }}

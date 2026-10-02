@@ -9,8 +9,13 @@ exact ChatGPT counts (local tokenizer), terms, tutorial, light/dark mode. Claude
 show as estimates, and the rewrite button says it's unavailable. That also satisfies the hard
 rule: **no public paid rewrite before accounts (Phase 2)**.
 
-Cost at low traffic: about **$0–1/month** (CloudFront's free tier covers 1 TB and 10M requests a
-month; S3 storage is a few cents).
+Cost at low traffic: about **$0–1/month**. CloudFront's always-free allowance covers 1 TB and
+10M requests a month, and the site is a few MB in S3.
+
+**Stays on the AWS Free plan.** Nothing here creates an AWS Organization, Control Tower or any
+other step that moves a Free plan account to the paid plan (that expires Free Tier credits
+immediately). In particular: **don't enable IAM Identity Center** on a Free plan account; it
+creates an Organization. This guide uses a plain IAM user instead.
 
 ---
 
@@ -18,32 +23,33 @@ month; S3 storage is a few cents).
 
 1. Sign in to the AWS console as the **root user** and turn on **MFA**
    (account menu → Security credentials → Assign MFA device).
-2. Create a day-to-day admin login so you don't use root:
-   - Open **IAM Identity Center** → Enable (pick region **ca-central-1**).
-   - **Users** → Add user (your email).
-   - **Permission sets** → Create → Predefined → `AdministratorAccess`.
-   - **AWS accounts** → select your account → Assign users → your user + that permission set.
-   - Accept the email invite and set up MFA for this user too.
-3. Add a **budget alarm**: Billing and Cost Management → **Budgets** → Create budget →
-   Monthly cost budget → e.g. **$10** → email alerts at 80% (actual) and 100% (forecasted).
+2. Add a **budget alarm**: Billing and Cost Management → **Budgets** → Create budget →
+   "Zero spend budget" (emails you the moment anything costs money) **and** a monthly cost
+   budget of **$5** with email alerts. Budgets are free.
+3. Create a day-to-day admin user so you don't use root:
+   - **IAM** → **Users** → **Create user** → name `promptiq-admin`.
+   - Tick **Provide user access to the AWS Management Console** → "I want to create an IAM user"
+     → set a password.
+   - Permissions: **Attach policies directly** → `AdministratorAccess` → Create.
+   - Open the user → **Security credentials** → **Assign MFA device**.
+   - Same tab → **Create access key** → "Command Line Interface (CLI)" → copy the Access key ID
+     and Secret access key. They're shown once; never paste them into the project or commit them.
 
-## 2. Log in from your Mac (once, then when the session expires)
-
-The AWS CLI is already installed.
+## 2. Log in from your Mac (once)
 
 ```sh
-aws configure sso
-#   SSO session name: promptiq
-#   SSO start URL:    (the "AWS access portal URL" from IAM Identity Center → Dashboard)
-#   SSO region:       ca-central-1
-#   Pick your account and the AdministratorAccess role
-#   Default region:   ca-central-1
-#   Profile name:     promptiq
+aws configure --profile promptiq
+#   AWS Access Key ID:     (from step 1.3)
+#   AWS Secret Access Key: (from step 1.3)
+#   Default region name:   us-east-1
+#   Default output format: json
 
 export AWS_PROFILE=promptiq
-aws sso login
-aws sts get-caller-identity   # shows your account ID if it worked
+aws sts get-caller-identity   # shows your account ID and promptiq-admin if it worked
 ```
+
+The keys are stored in `~/.aws/credentials`, outside the project. If they ever leak, delete the
+access key in IAM and create a new one.
 
 ## 3. Create the S3 bucket (private)
 
@@ -52,18 +58,23 @@ Bucket names are global, so add something unique:
 ```sh
 export PG_BUCKET=promptiq-web-$(aws sts get-caller-identity --query Account --output text)
 
-aws s3api create-bucket --bucket "$PG_BUCKET" --region ca-central-1 \
-  --create-bucket-configuration LocationConstraint=ca-central-1
+aws s3api create-bucket --bucket "$PG_BUCKET" --region us-east-1
 
-# Keep it private (the default) and keep old versions so you can roll back.
+# Keep it private (the default). No versioning: roll back by redeploying an older commit.
 aws s3api put-public-access-block --bucket "$PG_BUCKET" \
   --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-aws s3api put-bucket-versioning --bucket "$PG_BUCKET" --versioning-configuration Status=Enabled
 ```
 
 Don't turn on "static website hosting" for the bucket; CloudFront reads it privately.
 
-## 4. Create the security-headers policy
+## 4. Security headers
+
+**CloudFront Free plan:** custom response headers policies need the Business plan. Pick the
+managed **SecurityHeadersPolicy** on the default behavior instead (HSTS, nosniff,
+X-Frame-Options, Referrer-Policy). The Content-Security-Policy below is already in the built
+`index.html` as a `<meta>` tag (see `apps/web/vite.config.ts`), so nothing is lost.
+
+On a paid plan you can create a custom policy instead:
 
 CloudFront console → **Policies** → **Response headers** → **Create response headers policy**:
 
@@ -74,7 +85,7 @@ CloudFront console → **Policies** → **Response headers** → **Create respon
 - **Content-Security-Policy**: on, override origin, value:
 
   ```
-  default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   ```
 
   This exact policy was tested against the production build (terms, tutorial, PDF/Word/image
@@ -96,6 +107,7 @@ versions):
 | Cache policy            | `CachingOptimized`                                                                                                   |
 | Response headers policy | `promptiq-security` (from step 4)                                                                                    |
 | Default root object     | `index.html`                                                                                                         |
+| Pricing plan            | If offered: **Free** flat-rate plan, or pay-as-you-go (both $0 at this traffic). Not a paid flat-rate plan           |
 | Price class             | North America and Europe (cheapest; change later if you have users elsewhere)                                        |
 | WAF                     | Off for now (about $6–10/month). Turn it on when the API or rewrite goes public                                      |
 
@@ -137,13 +149,64 @@ Open `https://<your-distribution>.cloudfront.net` and go through:
 - [ ] Response headers (F12 → Network → the document): `content-security-policy`,
       `strict-transport-security` present.
 
-## 8. Updating and rolling back
+## 8. Automatic deploys from GitHub (recommended)
 
-- **Update:** commit, then `pnpm deploy:web`.
-- **Roll back:** check out the previous commit and deploy it again. (Bucket versioning also keeps
-  older copies of every file.)
+`.github/workflows/deploy-web.yml` deploys `main` on every push (docs-only changes skipped), and
+can be run by hand from the Actions tab. GitHub signs in to AWS with short-lived OIDC
+credentials, so no AWS keys are stored in GitHub. All of this is free.
 
-## 9. Custom domain (when you buy one)
+1. **IAM → Identity providers → Add provider** → OpenID Connect:
+   - Provider URL: `https://token.actions.githubusercontent.com`
+   - Audience: `sts.amazonaws.com`
+2. **IAM → Roles → Create role** → Web identity:
+   - Identity provider: `token.actions.githubusercontent.com`, audience `sts.amazonaws.com`
+   - GitHub organization: `MohamadChehade512`, repository: `PromptIQ`, branch: `main`
+   - Skip the permissions page, name it `promptiq-github-deploy`, create it.
+   - Open the role → **Add permissions → Create inline policy → JSON**, paste (with your bucket,
+     account ID and distribution ID), name it `deploy-web`:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": "s3:ListBucket",
+         "Resource": "arn:aws:s3:::promptiq-web-097537979364"
+       },
+       {
+         "Effect": "Allow",
+         "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+         "Resource": "arn:aws:s3:::promptiq-web-097537979364/*"
+       },
+       {
+         "Effect": "Allow",
+         "Action": "cloudfront:CreateInvalidation",
+         "Resource": "arn:aws:cloudfront::097537979364:distribution/E2FCHX4QWQP1ZA"
+       }
+     ]
+   }
+   ```
+
+   - Copy the role's **ARN**.
+
+3. **GitHub → repo Settings → Environments → New environment** `production` (optionally limit it
+   to the `main` branch). Then **Settings → Secrets and variables → Actions → Variables** →
+   add three repository variables (none of them are secret):
+   - `AWS_DEPLOY_ROLE_ARN`: the role ARN
+   - `PG_BUCKET`: `promptiq-web-097537979364`
+   - `PG_DISTRIBUTION_ID`: `E2FCHX4QWQP1ZA`
+4. Push to `main`, or **Actions → Deploy web → Run workflow**.
+
+## 9. Updating and rolling back
+
+- **Update:** push to `main` (or run `pnpm deploy:web` from your Mac).
+- **Roll back:** `git revert` the bad commit and push, or run the workflow on an older commit.
+
+## 10. Custom domain (optional, not free)
+
+A domain costs about $15/year and a Route 53 hosted zone $0.50/month; the HTTPS certificate is
+free. Skip this to stay at $0.
 
 1. Route 53 → Registered domains → register it (about $15/year for `.com`).
 2. **ACM** → switch region to **us-east-1** (CloudFront only uses certificates from there) →

@@ -1,11 +1,44 @@
 import react from '@vitejs/plugin-react';
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import pkg from './package.json' with { type: 'json' };
 
 const apiPort = process.env.API_PORT ?? '8787';
 
+/**
+ * The Content-Security-Policy, as a <meta> tag in the built page. CloudFront's free plan can't
+ * send custom headers. Build only: the dev server needs inline scripts for hot reload.
+ * (frame-ancestors is ignored in a meta tag; the managed SecurityHeadersPolicy's
+ * X-Frame-Options covers framing.)
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  'upgrade-insecure-requests',
+].join('; ');
+
+const cspMeta: Plugin = {
+  name: 'csp-meta',
+  apply: 'build',
+  transformIndexHtml: () => [
+    {
+      tag: 'meta',
+      attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP },
+      injectTo: 'head-prepend',
+    },
+  ],
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cspMeta],
   // Shown in the footer; bump "version" in apps/web/package.json for each release.
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: {
